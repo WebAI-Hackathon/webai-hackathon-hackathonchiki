@@ -1,10 +1,55 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <title>HELP</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic Story Weaver</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <p>I am just KEN</p>
+    <h1>✨ Magic Story Weaver ✨</h1>
+    <p>Create your own fairy tale with AI magic!</p>
+    
+    <div id="step1" class="step active">
+        <h2>Step 1: Create Your Character</h2>
+        <p>Describe the main character for your story:</p>
+        <input type="text" id="characterPrompt" placeholder="e.g., A brave little rabbit with a golden crown">
+        <button onclick="generateCharacter()">Create Character</button>
+        <div id="characterResult" class="story-stage">
+            <p>Your character will appear here...</p>
+        </div>
+        <button id="nextStep1" style="display:none;" onclick="nextStep(2)">Next: Create Story</button>
+    </div>
+    
+    <div id="step2" class="step">
+        <h2>Step 2: Create Your Story</h2>
+        <p>Tell me about the adventure your character will have:</p>
+        <input type="text" id="storyPrompt" placeholder="e.g., The rabbit must find the magical carrot to save the kingdom">
+        <button onclick="generateStory()">Generate Story</button>
+        <div id="storyResult" class="story-stage">
+            <p>Your story will appear here...</p>
+        </div>
+        <button id="nextStep2" style="display:none;" onclick="nextStep(3)">Next: Choose Narration</button>
+    </div>
+    
+    <div id="step3" class="step">
+        <h2>Step 3: Choose Your Narrator</h2>
+        <p>Select a voice for your story:</p>
+        <div id="voiceOptions">
+            <div class="voice-option" onclick="selectVoice('alloy', this)">Wise Old Wizard</div>
+            <div class="voice-option" onclick="selectVoice('echo', this)">Mysterious Storyteller</div>
+            <div class="voice-option" onclick="selectVoice('fable', this)">Enchanting Fairy</div>
+            <div class="voice-option" onclick="selectVoice('onyx', this)">Dramatic Bard</div>
+        </div>
+        <div id="finalStory" class="story-stage">
+            <h3>Your Fairy Tale</h3>
+            <div id="storyImages"></div>
+            <div id="storyText"></div>
+        </div>
+        <button onclick="narrateStory()">Hear Your Story</button>
+        <button onclick="saveStory()">Save Your Story</button>
+    </div>
+
+    <script src="app.js"></script>
 </body>
 </html>
