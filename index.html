@@ -1,71 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Magic Story Weaver</title>
-  <link rel="stylesheet" href="style.css" />
-  <style>
-    body { font-family: Arial, sans-serif; padding: 2em; max-width: 700px; margin: auto; background: #f9f7f1; }
-    h1, h2 { color: #4a2c2a; }
-    .step { display: none; margin-bottom: 2em; }
-    .step.active { display: block; }
-    input[type="text"] { width: 100%; padding: 0.5em; font-size: 1em; margin-bottom: 1em; }
-    button { padding: 0.5em 1em; font-size: 1em; cursor: pointer; margin-top: 0.5em; }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
-    .voice-option { display: inline-block; padding: 0.5em 1em; border: 1px solid #4a2c2a; border-radius: 4px; margin: 0.2em; cursor: pointer; }
-    .voice-option.selected { background: #4a2c2a; color: white; }
-    .story-stage { background: white; padding: 1em; border-radius: 6px; box-shadow: 0 0 5px rgba(0,0,0,0.1); margin-top: 1em; }
-    .character-image { max-width: 100%; max-height: 300px; border-radius: 8px; }
-    .status-message { margin-top: 1em; font-style: italic; color: #b35f4f; }
-  </style>
-</head>
-<body>
-  <h1>✨ Magic Story Weaver ✨</h1>
-  <p>Create your own fairy tale with AI magic!</p>
-  
-  <div id="step1" class="step active">
-    <h2>Step 1: Create Your Character</h2>
-    <p>Describe the main character for your story:</p>
-    <input type="text" id="characterPrompt" placeholder="e.g., A brave little rabbit with a golden crown" />
-    <button onclick="generateCharacter()">Create Character</button>
-    <div id="characterResult" class="story-stage">
-      <p>Your character will appear here...</p>
-    </div>
-    <button id="nextStep1" style="display:none;" onclick="nextStep(2)">Next: Create Story</button>
-  </div>
-  
-  <div id="step2" class="step">
-    <h2>Step 2: Create Your Story</h2>
-    <p>Tell me about the adventure your character will have:</p>
-    <input type="text" id="storyPrompt" placeholder="e.g., The rabbit must find the magical carrot to save the kingdom" />
-    <button onclick="generateStory()">Generate Story</button>
-    <div id="storyResult" class="story-stage">
-      <p>Your story will appear here...</p>
-    </div>
-    <button id="nextStep2" style="display:none;" onclick="nextStep(3)">Next: Choose Narration</button>
-  </div>
-  
-  <div id="step3" class="step">
-    <h2>Step 3: Choose Your Narrator</h2>
-    <p>Select a voice for your story:</p>
-    <div id="voiceOptions">
-      <div class="voice-option selected" onclick="selectVoice('sophia', this)">Sophia (Default)</div>
-      <div class="voice-option" onclick="selectVoice('alloy', this)">Wise Old Wizard</div>
-      <div class="voice-option" onclick="selectVoice('echo', this)">Mysterious Storyteller</div>
-      <div class="voice-option" onclick="selectVoice('fable', this)">Enchanting Fairy</div>
-      <div class="voice-option" onclick="selectVoice('onyx', this)">Dramatic Bard</div>
-    </div>
-    <div id="finalStory" class="story-stage" style="margin-top: 1.5em;">
-      <h3>Your Fairy Tale</h3>
-      <div id="storyImages"></div>
-      <div id="storyText"></div>
-    </div>
-    <button onclick="narrateStory()">Hear Your Story</button>
-    <div id="narrationStatus" class="status-message"></div>
-    <button onclick="saveStory()">Save Your Story</button>
-  </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Magic Story Weaver</title>
+    <link rel="stylesheet" href="style/style.css" />
+  </head>
+  <body>
+    <h1>✨ Magic Story Weaver ✨</h1>
+    <p>Create your own fairy tale with AI magic!</p>
 
-  <script src="app.js"></script>
-</body>
+    <div id="step1" class="step active">
+      <h2>Step 1: Create Your Character</h2>
+      <p>Describe the main character for your story:</p>
+      <input
+        type="text"
+        id="characterPrompt"
+        placeholder="e.g., A brave little rabbit with a golden crown"
+      />
+      <button onclick="generateCharacter()">Create Character</button>
+      <div id="characterResult" class="story-stage">
+        <p>Your character will appear here...</p>
+      </div>
+      <button id="nextStep1" style="display: none" onclick="nextStep(2)">
+        Next: Create Story
+      </button>
+    </div>
+
+    <div id="step2" class="step">
+      <h2>Step 2: Create Your Story</h2>
+      <p>Tell me about the adventure your character will have:</p>
+      <input
+        type="text"
+        id="storyPrompt"
+        placeholder="e.g., The rabbit must find the magical carrot to save the kingdom"
+      />
+      <button onclick="generateStory()">Generate Story</button>
+      <div id="storyResult" class="story-stage">
+        <p>Your story will appear here...</p>
+      </div>
+      <button id="nextStep2" style="display: none" onclick="nextStep(3)">
+        Next: Choose Narration
+      </button>
+    </div>
+
+    <div id="step3" class="step">
+      <h2>Step 3: Choose Your Narrator</h2>
+      <p>Select a voice for your story:</p>
+      <div id="voiceOptions">
+        <div
+          class="voice-option selected"
+          onclick="selectVoice('sophia', this)"
+        >
+          Sophia (Default)
+        </div>
+        <div class="voice-option" onclick="selectVoice('alloy', this)">
+          Wise Old Wizard
+        </div>
+        <div class="voice-option" onclick="selectVoice('echo', this)">
+          Mysterious Storyteller
+        </div>
+        <div class="voice-option" onclick="selectVoice('fable', this)">
+          Enchanting Fairy
+        </div>
+        <div class="voice-option" onclick="selectVoice('onyx', this)">
+          Dramatic Bard
+        </div>
+      </div>
+      <div id="finalStory" class="story-stage" style="margin-top: 1.5em">
+        <h3>Your Fairy Tale</h3>
+        <div id="storyImages"></div>
+        <div id="storyText"></div>
+      </div>
+      <button onclick="narrateStory()">Hear Your Story</button>
+      <div id="narrationStatus" class="status-message"></div>
+      <button onclick="saveStory()">Save Your Story</button>
+    </div>
+
+    <script src="app.js"></script>
+    <script type="module">
+        import { Game } from './gameLogic/mainGameLogic.js';
+
+        const game = new Game();
+        game.start()
+    </script>
+  </body>
 </html>

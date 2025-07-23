@@ -1,5 +1,5 @@
 // Parent class for Character type
-class Character {
+export class Character {
   // constructor for the character
   constructor(name, hp, attackMultiplier, enemy) {
     this.name = name;
@@ -17,6 +17,10 @@ class Character {
         this.dead = false;
       }
     }
+  }
+
+  attack(target, dmg) {
+    target.getDamaged(dmg);
   }
 }
 
@@ -36,7 +40,7 @@ const elements = {
 };
 
 // The classes for the main characters
-class Wizard extends Character {
+export class Wizard extends Character {
   constructor(name, hp, attackMultiplier) {
     super(name, hp, attackMultiplier, false);
     console.log(`Creating a wizard ${name}: ${hp} hp`);
@@ -44,9 +48,9 @@ class Wizard extends Character {
 }
 
 // classes for the enemies
-class Slime extends Character {
-  constructor(name, element, hp, attackMultiplier) {
-    super(name, types.SLIME, element, hp, attackMultiplier, true);
+export class Slime extends Character {
+  constructor(name, hp, attackMultiplier) {
+    super(name, hp, attackMultiplier, true);
     console.log(`Creating a wizard ${name}: ${hp} hp`);
   }
 }

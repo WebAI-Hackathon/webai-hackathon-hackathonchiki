@@ -1,0 +1,63 @@
+body {
+  font-family: Arial, sans-serif;
+  padding: 2em;
+  max-width: 700px;
+  margin: auto;
+  background: #f9f7f1;
+}
+h1,
+h2 {
+  color: #4a2c2a;
+}
+.step {
+  display: none;
+  margin-bottom: 2em;
+}
+.step.active {
+  display: block;
+}
+input[type="text"] {
+  width: 100%;
+  padding: 0.5em;
+  font-size: 1em;
+  margin-bottom: 1em;
+}
+button {
+  padding: 0.5em 1em;
+  font-size: 1em;
+  cursor: pointer;
+  margin-top: 0.5em;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.voice-option {
+  display: inline-block;
+  padding: 0.5em 1em;
+  border: 1px solid #4a2c2a;
+  border-radius: 4px;
+  margin: 0.2em;
+  cursor: pointer;
+}
+.voice-option.selected {
+  background: #4a2c2a;
+  color: white;
+}
+.story-stage {
+  background: white;
+  padding: 1em;
+  border-radius: 6px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  margin-top: 1em;
+}
+.character-image {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 8px;
+}
+.status-message {
+  margin-top: 1em;
+  font-style: italic;
+  color: #b35f4f;
+}
