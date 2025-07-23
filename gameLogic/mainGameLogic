@@ -1,0 +1,86 @@
+class Game {
+    players; // Main players of type Character[]
+    enemies; // Enemies of type Character[]
+    playerTurn;
+
+    construct() {
+        // Creating the enteties
+        this.createCharacters(3);
+        this.createEnemies(2);
+
+        // Starting the main game loop
+        this.playerTurn = true;
+        this.mainGameLoop();
+    }
+
+    // Creating the numberOfCharacters times new Characters (Wizard)
+    createCharacters(numberOfCharacters) {
+        for (let i = 0; i < numberOfCharacters; i++) {
+            this.players.append(new Wizard("Wizard " + 1, Math.random()*100, Math.random() + 1));
+        }
+
+        console.log("Players are chosen:");
+        console.log(this.players);
+    }
+
+    // Creating the numberOfCharacter times new Enemies (Slime)
+    createEnemies(numberOfCharacters) {
+        for (let i = 0; i < numberOfCharacters; i++) {
+            this.enemies.append(new Slime("Slime " + 1, Math.random()*100, Math.random() + 1));
+        }
+
+        console.log("Enemie are created:");
+        console.log(this.enemies);
+    }
+
+    // As long as one player lives the game continues
+    checkForLoss() {
+        for (let player in this.players) { // at least one player alive
+            if (player.hp > 0) return false;
+        }
+
+        return true;
+    }
+
+    // As long as one enemy lives the game continues
+    checkForWin() {
+        for (let enemy in enemies) { // at least one enemy still alive
+            if (enemy.hp > 0) return false;
+        }
+
+        return true;
+    }
+
+    // Random player (or enemy) attacks random enemy (or player) and changes the turn
+    makeRandomTurn() {
+        randomPlayer = this.players[(Math.random()*10)%this.players.length];
+        randomEnemies = this.enemies[(Math.random()*10)%this.enemies.length];
+        randomDmg = Math.random()*10;
+        if (this.playerTurn) { // players take turn
+            randomPlayer.attack(randomEnemies, randomDmg*randomPlayer.attackMultiplier);
+        } else {
+            randomEnemies.attack(randomPlayer, randomDmg*randomEnemies.attackMultiplier);
+        }
+        this.playerTurn = !this.playerTurn;
+    }
+
+    mainGameLoop() {
+        gameOver = false;
+        while(!gameOver) {
+            this.makeRandomTurn();
+
+            // Checking for game end
+            if (this.checkForLoss) {
+                gameOver = true;
+                console.log("GAME OVER!!!");
+                console.log("Sadly the enemies have killed the main characters and won :(");
+            } else if(this.checkForWin) {
+                gameOver = true;
+                console.log("GAME OVER!!!");
+                console.log("THE MAIN CHARACTERS HAVE WON ^^");
+            } else {
+                gameOver = false;
+            }
+        }
+    }
+}
