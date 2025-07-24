@@ -33,34 +33,35 @@
             window.location.href = 'game.html';
         });
         
-        document.getElementById('useDefaultTheme').addEventListener('click', async () => {
-            try {
-                // Generate a random default theme
-                const response = await fetch('http://localhost:3000/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: "hackathon/qwen3",
-                        messages: [{
-                            role: "user",
-                            content: "Generate a random D&D adventure theme in one sentence. Just provide the theme description."
-                        }],
-                        temperature: 0.9
-                    })
-                });
-                
-                const data = await response.json();
-                const theme = data.choices?.[0]?.message?.content || "A mysterious dungeon full of treasures and dangers";
-                
-                localStorage.setItem('adndiTheme', theme);
-                localStorage.setItem('adndiThemeType', 'default');
-                window.location.href = 'game.html';
-                
-            } catch (error) {
-                console.error('Error generating default theme:', error);
-                alert('Failed to generate default theme. Please try again.');
-            }
-        });
-    </script>
+        // ... existing code ...
+
+document.getElementById('useDefaultTheme').addEventListener('click', async () => {
+  try {
+    // Generate theme directly through Litviva API
+    const response = await makeAPIRequest('chat', {
+      model: "hackathon/qwen3",
+      messages: [{
+        role: "user",
+        content: "Generate a random D&D adventure theme in one sentence. Just provide the theme description."
+      }],
+      temperature: 0.9
+    });
+    
+    const theme = response.choices?.[0]?.message?.content || 
+                 "A mysterious dungeon full of treasures and dangers";
+    
+    localStorage.setItem('adndiTheme', theme);
+    localStorage.setItem('adndiThemeType', 'default');
+    window.location.href = 'game.html';
+    
+  } catch (error) {
+    console.error('Error generating default theme:', error);
+    alert('Failed to generate default theme. Using fallback.');
+    localStorage.setItem('adndiTheme', 'Epic fantasy adventure');
+    window.location.href = 'game.html';
+  }
+});
+
+// ... rest of file ...</script>
 </body>
 </html>

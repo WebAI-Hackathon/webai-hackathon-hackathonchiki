@@ -1,6 +1,4 @@
-/************************************** 
- * ADnDI - app.js - Optimized Version
- **************************************/
+
 
 const appState = {
   characters: [],
@@ -9,8 +7,9 @@ const appState = {
   isProcessing: false
 };
 
+// Update to Litviva API
 const API_CONFIG = {
-  BASE_URL: 'http://localhost:3000',
+  BASE_URL: 'https://api.litviva.com/v1',
   API_KEY: 'sk-RDjpy3tDOusiadmVRKXtbg',
   TIMEOUT: 15000 // Increased timeout for image generation
 };
@@ -35,7 +34,13 @@ async function makeAPIRequest(path, payload, retries = 3) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/${path}`, {
+      // Map paths to Litviva endpoints
+      const endpoint = 
+        path === 'chat' ? 'chat/completions' : 
+        path === 'image' ? 'images/generations' : 
+        path;
+      
+      const response = await fetch(`${API_CONFIG.BASE_URL}/${endpoint}`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -56,12 +61,21 @@ async function makeAPIRequest(path, payload, retries = 3) {
       
       // Validate response structure
       if (path === 'chat' && (!data.choices?.[0]?.message?.content)) {
-        console.log(data);
-        console.log(!data.choices?.[0]?.message?.content);
         throw new Error("Invalid chat response format");
       }
-      if (path === 'image' && (!data.data?.[0]?.url && !data.data?.[0]?.b64_json)) {
-        throw new Error("Invalid image response format");
+      if (path === 'image') {
+        // Normalize image response
+        const imageData = data.data?.[0];
+        if (!imageData) throw new Error("No image data received");
+        
+        // Handle both URL and base64 responses
+        if (imageData.url) {
+          data.url = imageData.url;
+        } else if (imageData.b64_json) {
+          data.url = `data:image/png;base64,${imageData.b64_json}`;
+        } else {
+          throw new Error("Invalid image response format");
+        }
       }
       
       return data;
@@ -73,6 +87,7 @@ async function makeAPIRequest(path, payload, retries = 3) {
   }
 }
 
+// ... rest of app.js remains unchanged ...
 function generateCharacterStats(characterData) {
     return {
         hp: 10 + parseInt(characterData.level) * 5,

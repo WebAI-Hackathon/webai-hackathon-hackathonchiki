@@ -73,23 +73,29 @@
                 Include characters with these classes: ${finalData.characters.map(c => c.type).join(', ')}. 
                 Dramatic, colorful, detailed.`;
             
-            try {
-                const response = await makeAPIRequest('image', {
-                    model: "hackathon/text2image",
-                    prompt: prompt,
-                    n: 1,
-                    size: "512x512"
-                });
-                
-                const imageUrl = response.data?.[0]?.url;
-                if (imageUrl) {
-                    document.getElementById('storyIllustration').innerHTML = `
-                        <img src="${imageUrl}" alt="Final Story Illustration">
-                    `;
-                }
-            } catch (error) {
-                console.error('Error generating illustration:', error);
-            }
+             try {
+    const response = await makeAPIRequest('image', {
+      model: "hackathon/text2image",
+      prompt: prompt,
+      n: 1,
+      size: "512x512"
+    });
+    
+    const imageUrl = response.url;
+    if (imageUrl) {
+      document.getElementById('storyIllustration').innerHTML = `
+        <img src="${imageUrl}" alt="Final Story Illustration">
+      `;
+    }
+  } catch (error) {
+    console.error('Error generating illustration:', error);
+    // Use fallback image
+    document.getElementById('storyIllustration').innerHTML = `
+      <div class="placeholder-illustration">
+        <p>Illustration could not be generated</p>
+      </div>
+    `;
+  }
         }
         
         function formatStoryText(text) {

@@ -157,29 +157,54 @@
         }
       }
 
-      async function regenerateCharacterImage(index) {
-        const char = characters[index];
-        try {
-          showLoadingState(index, true);
+      // ... existing code ...
 
-          // Generate new image
-          const newImage = await generateCharacterImage(
-            char.description,
-            char.type
-          );
+async function regenerateCharacterImage(index) {
+  const char = characters[index];
+  try {
+    showLoadingState(index, true);
 
-          // Update character
-          characters[index].image = newImage;
-          localStorage.setItem("adndiCharacters", JSON.stringify(characters));
+    // Generate new image directly to Litviva
+    const response = await makeAPIRequest('image', {
+      model: "hackathon/text2image",
+      prompt: enhancePrompt(char.description, char.type),
+      n: 1,
+      size: "512x512",
+      quality: "hd",
+      style: "fantasy"
+    });
+    
+    const newImage = response.url;
 
-          renderCharacterCards();
-        } catch (error) {
-          console.error("Regeneration failed:", error);
-          alert("Failed to regenerate image. Please try again.");
-          showLoadingState(index, false);
-        }
-      }
+    // Update character
+    characters[index].image = newImage;
+    localStorage.setItem("adndiCharacters", JSON.stringify(characters));
 
+    renderCharacterCards();
+  } catch (error) {
+    console.error("Regeneration failed:", error);
+    alert("Failed to regenerate image. Using placeholder");
+    characters[index].image = getLocalPlaceholder(char.type);
+    renderCharacterCards();
+  }
+}
+
+// Add prompt enhancement function
+function enhancePrompt(description, archetype) {
+  const styleGuide = {
+    barbarian: "dynamic pose, battle-scarred, wild hair, dramatic lighting",
+    wizard: "intricate robes, glowing magical effects, scholarly demeanor",
+    rogue: "shadowy, agile pose, leather armor, mysterious atmosphere",
+    // Add more archetypes as needed
+  };
+  
+  return `D&D ${archetype} character portrait: ${description.substring(0, 900)}. 
+    ${styleGuide[archetype.toLowerCase()] || ''}
+    Fantasy art, digital painting, highly detailed, vibrant colors, 
+    character centered, artstation trending`;
+}
+
+// ... rest of file ...
       function showLoadingState(index, isLoading) {
         const card = document.querySelector(
           `.character-card[data-index="${index}"]`

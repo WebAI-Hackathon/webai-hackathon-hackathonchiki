@@ -371,12 +371,44 @@
           throw new Error(errors.join("\n"));
         }
       }
-
+function enhancePrompt(description, archetype) {
+    const styleGuide = {
+      barbarian: "dynamic pose, battle-scarred, wild hair, dramatic lighting",
+      wizard: "intricate robes, glowing magical effects, scholarly demeanor",
+      rogue: "shadowy, agile pose, leather armor, mysterious atmosphere",
+      cleric: "holy symbols, radiant light, pious expression",
+      druid: "nature elements, animal companions, wild appearance",
+      fighter: "armor, weapons, battle-ready stance",
+      paladin: "knightly armor, holy aura, determined expression",
+      ranger: "camouflage, bow or dual weapons, animal companion nearby",
+      sorcerer: "innate magic, chaotic energy, dramatic pose",
+      warlock: "pact marks, dark energy, mysterious aura",
+      bard: "musical instrument, flamboyant clothes, charismatic smile",
+      monk: "simple robes, focused expression, martial arts stance"
+    };
+    
+    return `D&D ${archetype} character portrait: ${description.substring(0, 900)}. 
+      ${styleGuide[archetype.toLowerCase()] || ''}
+      Fantasy art, digital painting, highly detailed, vibrant colors, 
+      character centered, artstation trending`;
+  }
       // Character generation function
       async function generateCharacterFromData(formData) {
-        const description = await generateCharacterDescription(formData);
-        const imageUrl = await generateCharacterImage(description, formData.archetype);
-        return {
+  const description = await generateCharacterDescription(formData);
+  
+  // Generate image directly
+  const response = await makeAPIRequest('image', {
+    model: "hackathon/text2image",
+    prompt: enhancePrompt(description, formData.archetype),
+    n: 1,
+    size: "512x512",
+    quality: "hd",
+    style: "fantasy"
+  });
+  
+  const imageUrl = response.url;
+  
+  return {
           name: formData.name,
           gender: formData.gender,
           level: parseInt(formData.level),

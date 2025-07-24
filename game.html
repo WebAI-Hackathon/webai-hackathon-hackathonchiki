@@ -75,7 +75,10 @@
                 container.appendChild(charElement);
             });
         }
-        
+        // ... existing code ...
+
+
+// ... rest of file ...
         async function generateNextScene() {
             const storyPrompt = `Continue this D&D adventure based on the theme "${gameState.theme}" and these characters: 
                 ${gameState.characters.map(c => `${c.name} (${c.type} level ${c.level})`).join(', ')}.
@@ -87,11 +90,11 @@
                 End with a clear choice that requires a D20 roll (describe what high and low rolls would mean).`;
             
             try {
-                const response = await makeAPIRequest('chat', {
-                    model: "hackathon/qwen3",
-                    messages: [{ role: "user", content: storyPrompt }],
-                    temperature: 0.8
-                });
+    const response = await makeAPIRequest('chat', {
+      model: "hackathon/qwen3",
+      messages: [{ role: "user", content: storyPrompt }],
+      temperature: 0.8
+    });
                 
                 const sceneText = response.choices?.[0]?.message?.content || "The adventure continues...";
                 gameState.story.push(sceneText);
