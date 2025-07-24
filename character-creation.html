@@ -22,6 +22,7 @@
     <script src="js/app.js"></script>
     <script>
       let characters = [];
+      let characterImageUrls = [];
       const maxCharacters = 4;
 
       document
@@ -78,16 +79,30 @@
         container.innerHTML = '<div class="loading-spinner large"></div>';
 
         try {
-          // Prefetch images
-          const imageUrls = characters.map((char) => char.image);
+          // Generate all image URLs in parallel
+          const imageRequests = characters.map((char) =>
+            generateCharacterImageUrl(char.image).catch((error) => {
+              console.error("Image generation failed:", error);
+              return IMAGE_SERVICE.getPlaceholderImage(
+                char.type,
+                char.description
+              ).url;
+            })
+          );
+
+          // Wait for all requests to complete
+          const imageUrls = await Promise.all(imageRequests);
+
+          // Prefetch and validate images
           const loadedUrls = await IMAGE_SERVICE.prefetchImages(imageUrls);
           const validUrls = new Set(loadedUrls);
 
           // Render cards
           container.innerHTML = "";
           characters.forEach((char, index) => {
-            const displayImage = validUrls.has(char.image)
-              ? { url: char.image, isFallback: false }
+            const charImageUrl = imageUrls[index];
+            const displayImage = validUrls.has(charImageUrl)
+              ? { url: charImageUrl, isFallback: false }
               : IMAGE_SERVICE.getPlaceholderImage(char.type, char.description);
 
             const card = document.createElement("div");
@@ -97,26 +112,26 @@
             card.dataset.index = index;
 
             card.innerHTML = `
-                <div class="card-actions">
-                    <button class="card-btn delete-btn" title="Delete character">🗑️</button>
-                    <button class="card-btn regenerate-btn" title="Regenerate image">🔄</button>
-                </div>
-                <div class="card-image-container">
-                    <img src="${displayImage.url}" alt="${char.name}" 
-                        loading="lazy"
-                        data-original-src="${char.image}"
-                        onerror="this.onerror=null;this.src='${
-                          IMAGE_SERVICE.getPlaceholderImage(char.type).url
-                        }'">
-                </div>
-                <div class="card-content">
-                    <h3>${escapeHTML(char.name)}</h3>
-                    <p><strong>Level:</strong> ${char.level}</p>
-                    <p><strong>Type:</strong> ${char.type}</p>
-                    <div class="description-preview">${
-                      char.description}</div>
-                </div>
-            `;
+        <div class="card-actions">
+            <button class="card-btn delete-btn" title="Delete character">🗑️</button>
+        </div>
+        <div class="card-image-container">
+            <img src="${charImageUrl}" alt="${char.name}"
+                 loading="lazy"
+                 data-original-src="${charImageUrl}"
+                 onerror="this.onerror=null;this.src='${
+                   IMAGE_SERVICE.getPlaceholderImage(char.type).url
+                 }'">
+        </div>
+        <div class="card-content">
+            <h3>${escapeHTML(char.name)}</h3>
+            <p><strong>Level:</strong> ${char.level}</p>
+            <p><strong>Type:</strong> ${char.type}</p>
+            <div class="description-preview">${truncateDescription(
+              char.description
+            )}</div>
+        </div>
+      `;
             container.appendChild(card);
           });
 
@@ -130,16 +145,8 @@
               deleteCharacter(index);
             });
           });
-
-          document.querySelectorAll(".regenerate-btn").forEach((btn) => {
-            btn.addEventListener("click", (e) => {
-              e.stopPropagation();
-              const index = parseInt(
-                e.target.closest(".character-card").dataset.index
-              );
-              regenerateCharacterImage(index);
-            });
-          });
+          
+          // ... rest of your event listener code ...
         } catch (error) {
           console.error("Error rendering characters:", error);
           container.innerHTML =
@@ -159,52 +166,23 @@
 
       // ... existing code ...
 
-async function regenerateCharacterImage(index) {
-  const char = characters[index];
-  try {
-    showLoadingState(index, true);
+      // Add prompt enhancement function
+      /*
+      function enhancePrompt(description, archetype) {
+        const styleGuide = {
+          barbarian: "dynamic pose, battle-scarred, wild hair, dramatic lighting",
+          wizard: "intricate robes, glowing magical effects, scholarly demeanor",
+          rogue: "shadowy, agile pose, leather armor, mysterious atmosphere",
+          // Add more archetypes as needed
+        };
 
-    // Generate new image directly to Litviva
-    const response = await makeAPIRequest('image', {
-      model: "hackathon/text2image",
-      prompt: enhancePrompt(char.description, char.type),
-      n: 1,
-      size: "512x512",
-      quality: "hd",
-      style: "fantasy"
-    });
-    
-    const newImage = response.url;
+        return `D&D ${archetype} character portrait: ${description.substring(0, 900)}.
+          ${styleGuide[archetype.toLowerCase()] || ''}
+          Fantasy art, digital painting, highly detailed, vibrant colors,
+          character centered, artstation trending`;
+      }*/
 
-    // Update character
-    characters[index].image = newImage;
-    localStorage.setItem("adndiCharacters", JSON.stringify(characters));
-
-    renderCharacterCards();
-  } catch (error) {
-    console.error("Regeneration failed:", error);
-    alert("Failed to regenerate image. Using placeholder");
-    characters[index].image = getLocalPlaceholder(char.type);
-    renderCharacterCards();
-  }
-}
-
-// Add prompt enhancement function
-function enhancePrompt(description, archetype) {
-  const styleGuide = {
-    barbarian: "dynamic pose, battle-scarred, wild hair, dramatic lighting",
-    wizard: "intricate robes, glowing magical effects, scholarly demeanor",
-    rogue: "shadowy, agile pose, leather armor, mysterious atmosphere",
-    // Add more archetypes as needed
-  };
-  
-  return `D&D ${archetype} character portrait: ${description.substring(0, 900)}. 
-    ${styleGuide[archetype.toLowerCase()] || ''}
-    Fantasy art, digital painting, highly detailed, vibrant colors, 
-    character centered, artstation trending`;
-}
-
-// ... rest of file ...
+      // ... rest of file ...
       function showLoadingState(index, isLoading) {
         const card = document.querySelector(
           `.character-card[data-index="${index}"]`
@@ -217,49 +195,49 @@ function enhancePrompt(description, archetype) {
         } else {
           const char = characters[index];
           imgContainer.innerHTML = `
-            <img src="${char.image}" alt="${char.name}">
-        `;
+                  <img src="${char.image}" alt="${char.name}">
+              `;
         }
       }
-/*
-      function getClassPlaceholder(archetype) {
-        // SVG placeholder with class colors
-        const colors = {
-          barbarian: "#772422",
-          bard: "#5a3d7a",
-          cleric: "#e0a040",
-          druid: "#5c7c3a",
-          fighter: "#8a8a8a",
-          monk: "#d4b16a",
-          paladin: "#c0c0e0",
-          ranger: "#6b8c42",
-          rogue: "#735c3a",
-          sorcerer: "#8a2be2",
-          warlock: "#6a287e",
-          wizard: "#2a4b8d",
-        };
+      /*
+            function getClassPlaceholder(archetype) {
+              // SVG placeholder with class colors
+              const colors = {
+                barbarian: "#772422",
+                bard: "#5a3d7a",
+                cleric: "#e0a040",
+                druid: "#5c7c3a",
+                fighter: "#8a8a8a",
+                monk: "#d4b16a",
+                paladin: "#c0c0e0",
+                ranger: "#6b8c42",
+                rogue: "#735c3a",
+                sorcerer: "#8a2be2",
+                warlock: "#6a287e",
+                wizard: "#2a4b8d",
+              };
 
-        const color = colors[archetype.toLowerCase()] || "#4a2c82";
+              const color = colors[archetype.toLowerCase()] || "#4a2c82";
 
-        return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"  height="512" viewBox="0 0 512 512">
-        <rect  height="512" fill="${color}" />
-    </svg>`;
-      }
+              return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"  height="512" viewBox="0 0 512 512">
+              <rect  height="512" fill="${color}" />
+          </svg>`;
+            }
 
-      function escapeHTML(str) {
-        return str.replace(
-          /[&<>'"]/g,
-          (tag) =>
-            ({
-              "&": "&amp;",
-              "<": "&lt;",
-              ">": "&gt;",
-              "'": "&#39;",
-              '"': "&quot;",
-            }[tag])
-        );
-      }
-*/
+            function escapeHTML(str) {
+              return str.replace(
+                /[&<>'"]/g,
+                (tag) =>
+                  ({
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    "'": "&#39;",
+                    '"': "&quot;",
+                  }[tag])
+              );
+            }
+      */
       // tialize
       loadCharacters();
     </script>
