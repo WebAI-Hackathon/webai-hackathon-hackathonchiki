@@ -224,28 +224,6 @@ function validateFormData(formData) {
     }
 }
 
-<<<<<<< HEAD
-<!-- Updated character generation function in character-quiz.html -->
-
-    async function generateCharacterFromData(formData) {
-        // Use the centralized functions from app.js
-        const description = await window.generateCharacterDescription(formData);
-        const imageUrl = await window.generateCharacterImage(description, formData.archetype);
-        
-        return {
-            name: formData.name,
-            level: parseInt(formData.level),
-            type: formData.archetype,
-            description: description,
-            image: imageUrl,
-            stats: {
-                hp: 10 + parseInt(formData.level) * 5,
-                attack: 3 + parseInt(formData.level),
-                defense: 2 + parseInt(formData.level)
-            }
-        };
-    }
-=======
 // Character generation function
 async function generateCharacterFromData(formData) {
     // Generate description
@@ -268,7 +246,6 @@ async function generateCharacterFromData(formData) {
         }
     };
 }
->>>>>>> 723359b54fd0c57f293060e69263dfef78cb14c4
 
 // Save to local storage
 function saveCharacterToLocalStorage(character) {
