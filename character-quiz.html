@@ -212,27 +212,26 @@ function validateFormData(formData) {
     }
 }
 
-// Character generation function
-async function generateCharacterFromData(formData) {
-    // Generate description
-    const description = await generateCharacterDescription(formData);
-    
-    // Generate image
-    const imageUrl = await generateCharacterImage(description, formData.archetype);
-    
-    return {
-        name: formData.name,
-        level: parseInt(formData.level),
-        type: formData.archetype,
-        description: description,
-        image: imageUrl,
-        stats: {
-            hp: 10 + parseInt(formData.level) * 5,
-            attack: 3 + parseInt(formData.level),
-            defense: 2 + parseInt(formData.level)
-        }
-    };
-}
+<!-- Updated character generation function in character-quiz.html -->
+
+    async function generateCharacterFromData(formData) {
+        // Use the centralized functions from app.js
+        const description = await window.generateCharacterDescription(formData);
+        const imageUrl = await window.generateCharacterImage(description, formData.archetype);
+        
+        return {
+            name: formData.name,
+            level: parseInt(formData.level),
+            type: formData.archetype,
+            description: description,
+            image: imageUrl,
+            stats: {
+                hp: 10 + parseInt(formData.level) * 5,
+                attack: 3 + parseInt(formData.level),
+                defense: 2 + parseInt(formData.level)
+            }
+        };
+    }
 
 // Save to local storage
 function saveCharacterToLocalStorage(character) {

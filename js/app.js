@@ -70,7 +70,14 @@ async function makeAPIRequest(path, payload, retries = 3) {
     }
   }
 }
-// Add this function to app.js
+
+function generateCharacterStats(characterData) {
+    return {
+        hp: 10 + parseInt(characterData.level) * 5,
+        attack: 3 + parseInt(characterData.level),
+        defense: 2 + parseInt(characterData.level)
+    };
+}
 async function generateCharacterDescription(formData) {
   try {
     const prompt = `Create a vivid D&D character description for a ${formData.archetype} named ${formData.name}. 
