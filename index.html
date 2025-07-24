@@ -11,56 +11,8 @@
         <h1>Welcome to <strong>Artificial</strong> Dungeons and Dragons' <strong>Intelligence</strong>!</h1>
         <button id="startExperience" class="btn-primary">Start your ADnDI experience</button>
     </div>
-    <div id="step2" class="step">
-      <h2>Step 2: Create Your Story</h2>
-      <p>Tell me about the adventure your character will have:</p>
-      <input
-        type="text"
-        id="storyPrompt"
-        placeholder="e.g., The rabbit must find the magical carrot to save the kingdom"
-      />
-      <button onclick="generateStory()">Generate Story</button>
-      <div id="storyResult" class="story-stage">
-        <p>Your story will appear here...</p>
-      </div>
-      <button id="nextStep2" style="display: none" onclick="nextStep(3)">
-        Next: Choose Narration
-      </button>
-    </div>
-
-    <div id="step3" class="step">
-      <h2>Step 3: Choose Your Narrator</h2>
-      <p>Select a voice for your story:</p>
-      <div id="voiceOptions">
-        <div
-          class="voice-option selected"
-          onclick="selectVoice('sophia', this)"
-        >
-          Sophia (Default)
-        </div>
-        <div class="voice-option" onclick="selectVoice('alloy', this)">
-          Wise Old Wizard
-        </div>
-        <div class="voice-option" onclick="selectVoice('echo', this)">
-          Mysterious Storyteller
-        </div>
-        <div class="voice-option" onclick="selectVoice('fable', this)">
-          Enchanting Fairy
-        </div>
-        <div class="voice-option" onclick="selectVoice('onyx', this)">
-          Dramatic Bard
-        </div>
-      </div>
-      <div id="finalStory" class="story-stage" style="margin-top: 1.5em">
-        <h3>Your Fairy Tale</h3>
-        <div id="storyImages"></div>
-        <div id="storyText"></div>
-      </div>
-      <button onclick="narrateStory()">Hear Your Story</button>
-      <div id="narrationStatus" class="status-message"></div>
-      <button onclick="saveStory()">Save Your Story</button>
-    </div>
-
+   
+    
     <script src="app.js"></script>
     <script>
         document.getElementById('startExperience').addEventListener('click', () => {
