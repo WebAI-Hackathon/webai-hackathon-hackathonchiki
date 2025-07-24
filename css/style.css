@@ -40,6 +40,7 @@ h1, h2, h3 {
     color: #743014;
     margin-bottom: 0;
     margin-bottom: 0;
+    text-align: center;
 }
 
 #welcome-header{
@@ -143,14 +144,19 @@ textarea {
     border: 1px solid #ddd;
     border-radius: 10px;
     padding: 15px;
-
+    background-color: #8d6e63;
+    background-image: url('characterCardFrame.jpg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 100%;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .character-card img {
     width: 100%;
     border-radius: 5px;
-    margin-bottom: 10px;
+    background-color: transparent;
+
 }
         .character-card {
             position: relative;
@@ -174,6 +180,7 @@ textarea {
             gap: 5px;
         }
         
+
         .card-btn {
             background: rgba(0,0,0,0.7);
             color: white;
@@ -195,8 +202,10 @@ textarea {
         
         .card-image-container {
             height: 200px;
-            background-color: #f5f5f5;
-            display: flex;
+            width: 200px;
+            overflow: hidden;
+            background-color: transparent;
+            display: inline-block;
             align-items: center;
             justify-content: center;
         }
@@ -213,8 +222,10 @@ textarea {
         
         .cards-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            justify-content: center;
+            grid-auto-flow: column;
             gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 400px));
             margin: 20px 0;
         }
         
@@ -399,22 +410,46 @@ textarea {
   border-radius: 8px;
   overflow: hidden;
   margin-bottom: 20px;
+  padding-bottom: 40px;
 }
 
 .card-image-container {
-  height: 200px;
-  background-color: #f5f5f5;
+  height: 230px;
+  width: 230px;
+  display: inline-block;
+  background-color: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-top: 75px;
+  border-top-left-radius: 45%;
+  border-top-right-radius: 45%;
+  margin-left: auto;
+  margin-right: auto;
+  outline: solid 2px #5e4026;
+  outline-offset: 7px;
 }
+
 
 .card-image-container img {
   max-width: 100%;
   max-height: 100%;
+  width: 300px;
+  height: auto;
   object-fit: contain;
 }
 
 .card-content {
   padding: 15px;
+  text-align: center;
+}
+
+h3{
+    margin-top: -25px;
+    margin-bottom: 0px;
+    font-size: 54px;
+}
+
+p{
+    margin: 0;
 }
