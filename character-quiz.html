@@ -14,6 +14,16 @@
                 <label for="characterName">Character Name:</label>
                 <input type="text" id="characterName" required>
             </div>
+
+            <div class="form-group">
+                <label for="characterName">Character Gender</label>
+                <div class="options-grid">
+                    <label><input type="radio" name="gender" value="male">Male</label>
+                    <label><input type="radio" name="gender" value="female">Female</label>
+                    <label><input type="radio" name="gender" value="other">Other</label>
+                </div>
+                
+            </div>
             
             <div class="form-group">
                 <label for="characterLevel">Level:</label>
@@ -186,6 +196,7 @@ function getFormData() {
     const form = document.getElementById('characterForm');
     return {
         name: form.querySelector('#characterName').value.trim(),
+        gender: form.querySelector('input[name="gender"]:checked').value,
         level: form.querySelector('#characterLevel').value,
         archetype: form.querySelector('input[name="archetype"]:checked')?.value,
         background: form.querySelector('#background').value,
@@ -201,6 +212,7 @@ function validateFormData(formData) {
     const errors = [];
     
     if (!formData.name) errors.push("Character name is required");
+    if (!formData.gender) errors.push("Please select a character gender");
     if (!formData.archetype) errors.push("Please select a character archetype");
     if (!formData.background) errors.push("Please select a background");
     if (isNaN(formData.level) || formData.level < 1 || formData.level > 20) {
@@ -212,6 +224,7 @@ function validateFormData(formData) {
     }
 }
 
+<<<<<<< HEAD
 <!-- Updated character generation function in character-quiz.html -->
 
     async function generateCharacterFromData(formData) {
@@ -232,6 +245,30 @@ function validateFormData(formData) {
             }
         };
     }
+=======
+// Character generation function
+async function generateCharacterFromData(formData) {
+    // Generate description
+    const description = await generateCharacterDescription(formData);
+    
+    // Generate image
+    const imageUrl = await generateCharacterImage(description, formData.archetype);
+    
+    return {
+        name: formData.name,
+        gender: formData.gender,
+        level: parseInt(formData.level),
+        type: formData.archetype,
+        description: description,
+        image: imageUrl,
+        stats: {
+            hp: 10 + parseInt(formData.level) * 5,
+            attack: 3 + parseInt(formData.level),
+            defense: 2 + parseInt(formData.level)
+        }
+    };
+}
+>>>>>>> 723359b54fd0c57f293060e69263dfef78cb14c4
 
 // Save to local storage
 function saveCharacterToLocalStorage(character) {
