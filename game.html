@@ -1,3 +1,4 @@
+<!-- game.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ADnDI - Game</title>
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/app.js"></script>
+
 </head>
 <body>
     <div class="container">
@@ -12,7 +15,7 @@
         
         <div class="game-area">
             <div class="story-container">
-                <div id="gameScript" class="story-text"></div>
+                <div id="gameScript" class="story-text">Generating your adventure...</div>
             </div>
             
             <div class="dice-container">
@@ -28,8 +31,6 @@
         <button id="endGame" class="btn-secondary">End Game</button>
     </div>
 
-    <script src="js/app.js"></script>
-    <script src="js/game-logic.js"></script>
     <script>
         let gameState = {
             characters: [],
@@ -39,11 +40,26 @@
             diceResults: []
         };
         
+        // Fallback story segments
+        const fallbackStories = [
+            "As your party enters the ancient ruins, you hear a low growl echoing from the darkness. A large creature emerges, blocking your path. Roll a D20 to determine your reaction time!",
+            "You discover a mysterious potion on a pedestal. Is it healing or poison? Roll to determine if you can identify its properties!",
+            "A bridge across a chasm looks unstable. Roll to see if you can cross safely or need to find another way!",
+            "You encounter a group of goblins arguing over treasure. Roll to see if you can sneak past or must fight!",
+            "A magical portal appears before you. Roll to determine if you can control where it leads!"
+        ];
+        
         // Initialize game
         async function initGame() {
             // Load characters and theme
-            gameState.characters = JSON.parse(localStorage.getItem('adndiCharacters') || []);
-            gameState.theme = localStorage.getItem('adndiTheme') || 'A mysterious adventure';
+            try {
+                gameState.characters = JSON.parse(localStorage.getItem('adndiCharacters') || '[]');
+                gameState.theme = localStorage.getItem('adndiTheme') || 'A mysterious adventure';
+            } catch (e) {
+                console.error('Error loading game data:', e);
+                gameState.characters = [];
+                gameState.theme = 'Epic Fantasy Adventure';
+            }
             
             // Set theme title
             document.getElementById('gameThemeTitle').textContent = gameState.theme;
@@ -59,57 +75,72 @@
             const container = document.getElementById('characterDisplays');
             container.innerHTML = '';
             
+            if (gameState.characters.length === 0) {
+                container.innerHTML = '<p>No characters found</p>';
+                return;
+            }
+            
             gameState.characters.forEach(char => {
                 const charElement = document.createElement('div');
                 charElement.className = 'character-display';
                 charElement.innerHTML = `
-                    <img src="${char.image}" alt="${char.name}">
+                    <img src="${char.image || 'img/placeholder.png'}" alt="${char.name}">
                     <h3>${char.name}</h3>
                     <p>Level ${char.level} ${char.type}</p>
                     <div class="stats">
-                        <p>HP: <span class="hp-value">${char.stats.hp}</span></p>
-                        <p>Attack: ${char.stats.attack}</p>
-                        <p>Defense: ${char.stats.defense}</p>
+                        <p>HP: <span class="hp-value">${char.stats?.hp || 10}</span></p>
+                        <p>Attack: ${char.stats?.attack || 5}</p>
+                        <p>Defense: ${char.stats?.defense || 3}</p>
                     </div>
                 `;
                 container.appendChild(charElement);
             });
         }
-        // ... existing code ...
-
-
-// ... rest of file ...
+        
         async function generateNextScene() {
-            const storyPrompt = `Continue this D&D adventure based on the theme "${gameState.theme}" and these characters: 
-                ${gameState.characters.map(c => `${c.name} (${c.type} level ${c.level})`).join(', ')}.
-                
-                Previous story: ${gameState.story.slice(-3).join(' ')}
-                Previous dice results: ${gameState.diceResults.slice(-3).join(', ')}
-                
-                Create a new scene with a decision point that requires a dice roll to resolve. 
-                End with a clear choice that requires a D20 roll (describe what high and low rolls would mean).`;
+            let sceneText = "The adventure continues...";
             
             try {
-    const response = await makeAPIRequest('chat', {
-      model: "hackathon/qwen3",
-      messages: [{ role: "user", content: storyPrompt }],
-      temperature: 0.8
-    });
+                const storyPrompt = `Continue this D&D adventure based on the theme "${gameState.theme}" with these characters: 
+                    ${gameState.characters.map(c => `${c.name} (${c.type} level ${c.level})`).join(', ')}.
+                    
+                    Previous story: ${gameState.story.slice(-2).join(' ')}
+                    Previous dice results: ${gameState.diceResults.slice(-3).join(', ')}
+                    
+                    Create a new scene with a decision point that requires a D20 roll to resolve. 
+                    Include at least one enemy and one healing potion. 
+                    End with a clear choice that requires a D20 roll (describe what high and low rolls would mean).`;
                 
-                const sceneText = response.choices?.[0]?.message?.content || "The adventure continues...";
-                gameState.story.push(sceneText);
-                document.getElementById('gameScript').innerHTML = formatStoryText(sceneText);
+                const response = await makeAPIRequest('chat', {
+                    model: "hackathon/qwen3",
+                    messages: [{ role: "user", content: storyPrompt }],
+                    temperature: 0.8
+                });
+                
+                if (response.choices && response.choices.length > 0) {
+                    sceneText = response.choices[0].message.content;
+                } else {
+                    throw new Error("Empty response from API");
+                }
                 
             } catch (error) {
                 console.error('Error generating scene:', error);
-                document.getElementById('gameScript').textContent = "The story couldn't be generated. Please try again.";
+                // Use a random fallback story
+                sceneText = fallbackStories[Math.floor(Math.random() * fallbackStories.length)];
             }
+            
+            gameState.story.push(sceneText);
+            document.getElementById('gameScript').innerHTML = formatStoryText(sceneText);
         }
         
         function formatStoryText(text) {
-            // Simple formatting - replace line breaks with <br> and bold any dice mentions
-            return text.replace(/\n/g, '<br>')
-                       .replace(/(d\d+|roll)/gi, '<strong>$1</strong>');
+            // Simple formatting
+            return text
+                .replace(/\n/g, '<br>')
+                .replace(/(d20|d20 roll|roll)/gi, '<strong>$1</strong>')
+                .replace(/(healing potion)/gi, '<span style="color:green;font-weight:bold">$1</span>')
+                .replace(/(poison)/gi, '<span style="color:red;font-weight:bold">$1</span>')
+                .replace(/(enemy|monster|goblin|dragon)/gi, '<span style="color:#8c2a2a;font-weight:bold">$1</span>');
         }
         
         function rollD20() {
@@ -122,13 +153,14 @@
             const diceElement = document.getElementById('diceResult');
             
             // Show rolling animation
-            diceElement.textContent = '...';
+            diceElement.textContent = 'Rolling...';
             diceElement.className = 'dice-rolling';
             
             // After a short delay, show result
             setTimeout(() => {
                 diceElement.textContent = `You rolled: ${roll}`;
-                diceElement.className = roll >= 15 ? 'dice-success' : roll >= 10 ? 'dice-neutral' : 'dice-fail';
+                diceElement.className = roll >= 15 ? 'dice-success' : 
+                                      roll >= 10 ? 'dice-neutral' : 'dice-fail';
                 
                 // Save result and generate next scene
                 gameState.diceResults.push(roll);
@@ -138,14 +170,36 @@
         });
         
         function updateCharacterStats(roll) {
-            // Simple stat adjustments based on roll
+            // Update stats based on roll results
             gameState.characters.forEach(char => {
+                // Initialize stats if missing
+                if (!char.stats) {
+                    char.stats = {
+                        hp: 10 + char.level * 5,
+                        attack: 3 + char.level,
+                        defense: 2 + char.level
+                    };
+                }
+                
                 if (roll >= 15) {
-                    // Good roll - small HP boost
+                    // Good roll - small HP boost and chance to find healing potion
                     char.stats.hp = Math.min(char.stats.hp + 2, 10 + char.level * 5);
+                    if (Math.random() > 0.7) {
+                        char.stats.hp = Math.min(char.stats.hp + 3, 10 + char.level * 5);
+                    }
                 } else if (roll <= 5) {
-                    // Bad roll - take damage
+                    // Bad roll - take damage and chance to be poisoned
                     char.stats.hp = Math.max(char.stats.hp - 3, 0);
+                    if (Math.random() > 0.8) {
+                        char.stats.hp = Math.max(char.stats.hp - 2, 0);
+                    }
+                } else {
+                    // Neutral roll - small stat adjustments
+                    if (Math.random() > 0.5) {
+                        char.stats.attack += 1;
+                    } else {
+                        char.stats.defense += 1;
+                    }
                 }
             });
             
