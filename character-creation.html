@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADnDI - Character Creation</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Let's create your characters!</h1>
+        <div id="characterCards" class="cards-container"></div>
+        
+        <div class="actions">
+            <button id="createCharacter" class="btn-primary">Create new character</button>
+            <button id="nextStep" class="btn-secondary" disabled>Next step</button>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        let characters = [];
+        const maxCharacters = 4;
+        
+        document.getElementById('createCharacter').addEventListener('click', () => {
+            if (characters.length < maxCharacters) {
+                window.location.href = 'character-quiz.html';
+            }
+        });
+        
+        document.getElementById('nextStep').addEventListener('click', () => {
+            if (characters.length > 0) {
+                localStorage.setItem('adndiCharacters', JSON.stringify(characters));
+                window.location.href = 'game-theme.html';
+            }
+        });
+        
+        // Load any existing characters
+        function loadCharacters() {
+            const savedChars = localStorage.getItem('adndiCharacters');
+            if (savedChars) {
+                characters = JSON.parse(savedChars);
+                renderCharacterCards();
+            }
+        }
+        
+        function renderCharacterCards() {
+            const container = document.getElementById('characterCards');
+            container.innerHTML = '';
+            
+            characters.forEach(char => {
+                const card = document.createElement('div');
+                card.className = 'character-card';
+                card.innerHTML = `
+                    <img src="${char.image}" alt="${char.name}">
+                    <h3>${char.name}</h3>
+                    <p><strong>Level:</strong> ${char.level}</p>
+                    <p><strong>Type:</strong> ${char.type}</p>
+                    <p>${char.description}</p>
+                `;
+                container.appendChild(card);
+            });
+            
+            // Enable next step if at least one character
+            if (characters.length > 0) {
+                document.getElementById('nextStep').disabled = false;
+            }
+        }
+        
+        // Initialize
+        loadCharacters();
+    </script>
+</body>
+</html>

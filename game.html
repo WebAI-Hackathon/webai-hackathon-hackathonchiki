@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADnDI - Game</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1 id="gameThemeTitle">AI Generated Game</h1>
+        
+        <div class="game-area">
+            <div class="story-container">
+                <div id="gameScript" class="story-text"></div>
+            </div>
+            
+            <div class="dice-container">
+                <div id="diceResult"></div>
+                <button id="rollDice" class="btn-primary">Roll the dice</button>
+            </div>
+        </div>
+        
+        <div class="characters-container">
+            <div id="characterDisplays" class="characters-grid"></div>
+        </div>
+        
+        <button id="endGame" class="btn-secondary">End Game</button>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script src="js/game-logic.js"></script>
+    <script>
+        let gameState = {
+            characters: [],
+            theme: '',
+            story: [],
+            currentScene: 0,
+            diceResults: []
+        };
+        
+        // Initialize game
+        async function initGame() {
+            // Load characters and theme
+            gameState.characters = JSON.parse(localStorage.getItem('adndiCharacters') || []);
+            gameState.theme = localStorage.getItem('adndiTheme') || 'A mysterious adventure';
+            
+            // Set theme title
+            document.getElementById('gameThemeTitle').textContent = gameState.theme;
+            
+            // Render characters
+            renderCharacters();
+            
+            // Generate initial story
+            await generateNextScene();
+        }
+        
+        function renderCharacters() {
+            const container = document.getElementById('characterDisplays');
+            container.innerHTML = '';
+            
+            gameState.characters.forEach(char => {
+                const charElement = document.createElement('div');
+                charElement.className = 'character-display';
+                charElement.innerHTML = `
+                    <img src="${char.image}" alt="${char.name}">
+                    <h3>${char.name}</h3>
+                    <p>Level ${char.level} ${char.type}</p>
+                    <div class="stats">
+                        <p>HP: <span class="hp-value">${char.stats.hp}</span></p>
+                        <p>Attack: ${char.stats.attack}</p>
+                        <p>Defense: ${char.stats.defense}</p>
+                    </div>
+                `;
+                container.appendChild(charElement);
+            });
+        }
+        
+        async function generateNextScene() {
+            const storyPrompt = `Continue this D&D adventure based on the theme "${gameState.theme}" and these characters: 
+                ${gameState.characters.map(c => `${c.name} (${c.type} level ${c.level})`).join(', ')}.
+                
+                Previous story: ${gameState.story.slice(-3).join(' ')}
+                Previous dice results: ${gameState.diceResults.slice(-3).join(', ')}
+                
+                Create a new scene with a decision point that requires a dice roll to resolve. 
+                End with a clear choice that requires a D20 roll (describe what high and low rolls would mean).`;
+            
+            try {
+                const response = await makeAPIRequest('chat', {
+                    model: "hackathon/qwen3",
+                    messages: [{ role: "user", content: storyPrompt }],
+                    temperature: 0.8
+                });
+                
+                const sceneText = response.choices?.[0]?.message?.content || "The adventure continues...";
+                gameState.story.push(sceneText);
+                document.getElementById('gameScript').innerHTML = formatStoryText(sceneText);
+                
+            } catch (error) {
+                console.error('Error generating scene:', error);
+                document.getElementById('gameScript').textContent = "The story couldn't be generated. Please try again.";
+            }
+        }
+        
+        function formatStoryText(text) {
+            // Simple formatting - replace line breaks with <br> and bold any dice mentions
+            return text.replace(/\n/g, '<br>')
+                       .replace(/(d\d+|roll)/gi, '<strong>$1</strong>');
+        }
+        
+        function rollD20() {
+            return Math.floor(Math.random() * 20) + 1;
+        }
+        
+        // Event listeners
+        document.getElementById('rollDice').addEventListener('click', async () => {
+            const roll = rollD20();
+            const diceElement = document.getElementById('diceResult');
+            
+            // Show rolling animation
+            diceElement.textContent = '...';
+            diceElement.className = 'dice-rolling';
+            
+            // After a short delay, show result
+            setTimeout(() => {
+                diceElement.textContent = `You rolled: ${roll}`;
+                diceElement.className = roll >= 15 ? 'dice-success' : roll >= 10 ? 'dice-neutral' : 'dice-fail';
+                
+                // Save result and generate next scene
+                gameState.diceResults.push(roll);
+                updateCharacterStats(roll);
+                generateNextScene();
+            }, 1000);
+        });
+        
+        function updateCharacterStats(roll) {
+            // Simple stat adjustments based on roll
+            gameState.characters.forEach(char => {
+                if (roll >= 15) {
+                    // Good roll - small HP boost
+                    char.stats.hp = Math.min(char.stats.hp + 2, 10 + char.level * 5);
+                } else if (roll <= 5) {
+                    // Bad roll - take damage
+                    char.stats.hp = Math.max(char.stats.hp - 3, 0);
+                }
+            });
+            
+            renderCharacters();
+        }
+        
+        document.getElementById('endGame').addEventListener('click', () => {
+            localStorage.setItem('adndiFinalStory', JSON.stringify({
+                theme: gameState.theme,
+                characters: gameState.characters,
+                story: gameState.story.join('\n\n')
+            }));
+            window.location.href = 'final-story.html';
+        });
+        
+        // Start the game
+        initGame();
+    </script>
+</body>
+</html>
