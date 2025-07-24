@@ -266,21 +266,21 @@ textarea {
 }
 
 .dice-rolling {
-    color: #6a4c93;
+    color: #2f1c1e;
 }
 
 .dice-success {
-    color: #2e7d32;
+    color: #4a4c34;
     background-color: #e8f5e9;
 }
 
 .dice-neutral {
-    color: #f9a825;
+    color: #80581b;
     background-color: #fff8e1;
 }
 
 .dice-fail {
-    color: #c62828;
+    color: #743014;
     background-color: #ffebee;
 }
 
@@ -292,8 +292,8 @@ textarea {
 }
 
 .character-display {
-    background-color: white;
-    border: 1px solid #ddd;
+    background-color: rgba(233, 207, 153, 0.6);
+    border: 1px solid #84592b;
     border-radius: 10px;
     padding: 15px;
     width: 200px;
@@ -326,7 +326,6 @@ textarea {
 
 .story-text {
     flex: 2;
-    background-color: white;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
