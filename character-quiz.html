@@ -14,6 +14,16 @@
                 <label for="characterName">Character Name:</label>
                 <input type="text" id="characterName" required>
             </div>
+
+            <div class="form-group">
+                <label for="characterName">Character Gender</label>
+                <div class="options-grid">
+                    <label><input type="radio" name="gender" value="male">Male</label>
+                    <label><input type="radio" name="gender" value="female">Female</label>
+                    <label><input type="radio" name="gender" value="other">Other</label>
+                </div>
+                
+            </div>
             
             <div class="form-group">
                 <label for="characterLevel">Level:</label>
@@ -186,6 +196,7 @@ function getFormData() {
     const form = document.getElementById('characterForm');
     return {
         name: form.querySelector('#characterName').value.trim(),
+        gender: form.querySelector('input[name="gender"]:checked').value,
         level: form.querySelector('#characterLevel').value,
         archetype: form.querySelector('input[name="archetype"]:checked')?.value,
         background: form.querySelector('#background').value,
@@ -201,6 +212,7 @@ function validateFormData(formData) {
     const errors = [];
     
     if (!formData.name) errors.push("Character name is required");
+    if (!formData.gender) errors.push("Please select a character gender");
     if (!formData.archetype) errors.push("Please select a character archetype");
     if (!formData.background) errors.push("Please select a background");
     if (isNaN(formData.level) || formData.level < 1 || formData.level > 20) {
@@ -222,6 +234,7 @@ async function generateCharacterFromData(formData) {
     
     return {
         name: formData.name,
+        gender: formData.gender,
         level: parseInt(formData.level),
         type: formData.archetype,
         description: description,

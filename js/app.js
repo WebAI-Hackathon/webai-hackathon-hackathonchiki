@@ -75,6 +75,7 @@ async function generateCharacterDescription(formData) {
   try {
     const prompt = `Create a vivid D&D character description for a ${formData.archetype} named ${formData.name}. 
       They are level ${formData.level}. 
+      Their gender is: ${formData.gender}.
       Background: ${formData.background}. 
       Hair: ${formData.hair || 'not specified'}. 
       Conflict attitude: ${formData.conflict}. 
@@ -98,7 +99,7 @@ async function generateCharacterDescription(formData) {
           content: prompt
         }
       ],
-      temperature: 0.8,
+      temperature: 0.7,
       max_tokens: 300
     });
 
