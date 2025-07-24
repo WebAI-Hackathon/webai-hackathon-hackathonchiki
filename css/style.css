@@ -1,11 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap%22%20rel=%22stylesheet');
+@import url('https://fonts.googleapis.com/css2?family=Lugrasimo&display=swap" rel="stylesheet');
+@import url('https://fonts.googleapis.com/css2?family=Macondo+Swash+Caps&display=swap%22%20rel=%22stylesheet');
+
 /* Base Styles */
 body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f5f0e6;
+  font-family: "MedievalSharp";
+  font-weight: 400;
+  font-style: normal;
+    background-color: #311e20;
     color: #333;
     margin: 0;
     padding: 0;
     line-height: 1.6;
+  background-image: url('frame.jpg'); /* Replace with your correct path */
+  background-size: 100% 100%;                /* Stretches image to fill the screen */
+  background-repeat: no-repeat;          /* Prevents tiling */
+  background-position: center;           /* Keeps image centered */
+}
+
+html, body{
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+    overflow:scroll;
+    
 }
 
 .container {
@@ -15,29 +35,55 @@ body {
 }
 
 h1, h2, h3 {
-    color: #4a2c82;
+    font-family: "UnifrakturCook";
+    font-size: 72px;
+    color: #743014;
+    margin-bottom: 0;
+    margin-bottom: 0;
+}
+
+#welcome-header{
+    font-size: 4em;
+}
+.header-main{
+    font-size: 5em;
+    line-height: 1.1;
     margin-bottom: 20px;
 }
 
 /* Buttons */
 .btn-primary {
-    background-color: #6a4c93;
-    color: white;
-    padding: 10px 20px;
+    background-color: transparent;
+    background-image: url('startButtonBackground.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 100%;
+    color: #5c331f;
+    padding: 16px 52px;
+    justify-content: center;
     border: none;
-    border-radius: 5px;
+    border-radius: 2px;
     cursor: pointer;
-    font-size: 16px;
     transition: background-color 0.3s;
+    margin-top: 20px;
+    font-family: "Lugrasimo";
+    font-size: 20px;
 }
 
 .btn-primary:hover {
-    background-color: #5a3d7a;
+    color: #907b5c;
 }
 
 .btn-secondary {
     background-color: #8d6e63;
-    color: white;
+    background-image: url('nextButton.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 100%;
+    background-color: transparent;
+    padding: 16px 32px;
+    font-family: "Lugrasimo";
+    color: #5c331f;
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
@@ -47,7 +93,7 @@ h1, h2, h3 {
 }
 
 .btn-secondary:hover {
-    background-color: #6d4c41;
+    color: #907b5c
 }
 
 /* Form Elements */
@@ -59,6 +105,7 @@ label {
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
+    
 }
 
 input[type="text"],
@@ -70,6 +117,13 @@ select {
     border: 1px solid #ddd;
     border-radius: 5px;
     font-size: 16px;
+    border-color: #69583e;
+    background-color: #e9cf9980;
+    box-sizing: border-box;
+}
+
+.options-grid label input[type="radio"]{
+    background-color: #e9cf9980;
 }
 
 textarea {
@@ -278,14 +332,14 @@ textarea {
     display: flex;
     align-items: center;
     padding: 10px;
-    background-color: white;
-    border: 1px solid #ddd;
+    background-color: #e9cf9980;
+    border: 1px solid  #69583e;
     border-radius: 5px;
     cursor: pointer;
 }
 
 .options-grid label:hover {
-    background-color: #f5f0e6;
+    background-color: #caba9c80;
 }
 
 .options-grid input[type="radio"] {

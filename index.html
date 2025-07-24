@@ -6,15 +6,31 @@
     <title>ADnDI - Welcome</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
-    <div class="container">
-        <h1>Welcome to <strong>Artificial</strong> Dungeons and Dragons' <strong>Intelligence</strong>!</h1>
+    <div class="container" style="text-align: center;">
+        <h1 id="welcome-header">Welcome to</h1>
+        <h1 class="header-main"><strong>Artificial</strong> Dungeons<br>and<br>Dragons' Intelligence</h1>
         <button id="startExperience" class="btn-primary">Start your ADnDI experience</button>
     </div>
+    <script src="https://cdn.jsdelivr.net/gh/peterhry/CircleType@2.3.1/dist/circletype.min.js"></script>
+    <script src="app.js"></script>
     <script>
         document.getElementById('startExperience').addEventListener('click', () => {
             window.location.href = 'character-creation.html';
         });
+
+
+        new CircleType(document.getElementById('welcome-header'))
+    .radius(1100);
+
     </script>
+
+    <style>
+        body{
+            
+
+        }
+    </style>
 </body>
 </html>
