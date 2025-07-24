@@ -1,53 +1,69 @@
-// API Helper Functions
+// utils.js - Optimized Version
 export async function makeAPIRequest(path, payload) {
     try {
-        const resp = await fetch(`http://localhost:3000/api/${path}`, {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+
+        const response = await fetch(`http://localhost:3000/api/${path}`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+                "Content-Type": "application/json",
+                "Cache-Control": "no-cache"
+            },
             body: JSON.stringify(payload),
+            signal: controller.signal
         });
         
-        if (!resp.ok) {
-            const errorData = await resp.json().catch(() => ({}));
-            throw new Error(errorData.error?.message || `HTTP Error ${resp.status}`);
+        clearTimeout(timeout);
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.message || `HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // Validate image response
+        if (path === 'image' && !data.data?.[0]?.url && !data.data?.[0]?.b64_json) {
+            throw new Error("Invalid image response");
         }
         
-        return await resp.json();
+        return data;
     } catch (error) {
-        console.error(`API request to ${path} failed:`, error);
-        throw new Error(`Network error: ${error.message}`);
+        console.error(`API request failed: ${error.message}`);
+        throw error;
     }
 }
 
-// UI Helper Functions
 export function showLoading(element, message) {
-    if (element) {
-        element.innerHTML = `<div class="loading">${message}</div>`;
-    }
+    if (!element) return;
+    element.innerHTML = `<div class="loading-spinner"></div><p>${escapeHTML(message)}</p>`;
+    element.style.display = 'block';
 }
 
 export function showError(element, message, details = "") {
-    if (element) {
-        element.innerHTML = `
-            <div class="error">
-                <p>${escapeHTML(message)}</p>
-                ${details ? `<p><small>${escapeHTML(details)}</small></p>` : ""}
-            </div>
-        `;
-    }
+    if (!element) return;
+    element.innerHTML = `
+        <div class="error-alert">
+            <p>${escapeHTML(message)}</p>
+            ${details ? `<details><summary>Details</summary>${escapeHTML(details)}</details>` : ""}
+            <button onclick="this.parentElement.style.display='none'">Dismiss</button>
+        </div>
+    `;
+    element.style.display = 'block';
 }
 
 export function escapeHTML(str = "") {
-    const div = document.createElement("div");
-    div.textContent = str;
-    return div.innerHTML;
+    return str.replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+    }[tag]));
 }
 
-export function renderTextToHTML(str = "") {
-    return escapeHTML(str).replace(/\n/g, "<br>");
-}
-
-// Dice Roll Functions
+// Dice functions remain the same
 export function rollDice(sides = 20) {
     return Math.floor(Math.random() * sides) + 1;
 }

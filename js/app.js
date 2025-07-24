@@ -1,9 +1,7 @@
 /************************************** 
- * ADnDI - app.js
- * Main application JavaScript file
+ * ADnDI - app.js - Optimized Version
  **************************************/
 
-// Global state
 const appState = {
   characters: [],
   currentTheme: null,
@@ -11,367 +9,314 @@ const appState = {
   isProcessing: false
 };
 
-/* ======= UTILITY FUNCTIONS ======= */
+const API_CONFIG = {
+  BASE_URL: 'http://localhost:3000',
+  API_KEY: 'sk-RDjpy3tDOusiadmVRKXtbg',
+  TIMEOUT: 15000 // Increased timeout for image generation
+};
 
-/**
- * Safely escape HTML strings
- */
+// Utility Functions
 function escapeHTML(str = "") {
   const div = document.createElement("div");
   div.textContent = str;
   return div.innerHTML;
 }
 
-/**
- * Convert newlines to <br> tags
- */
-function renderTextToHTML(str = "") {
-  return escapeHTML(str).replace(/\n/g, "<br>");
-}
-
-/**
- * Validate input fields
- */
 function validateInput(input, maxLength = 500, minLength = 1) {
   return input && typeof input === "string" && 
          input.trim().length >= minLength && 
          input.length <= maxLength;
 }
 
-/**
- * Show loading state
- */
-function showLoading(element, message = "Loading...") {
-  if (element) {
-    element.innerHTML = `<div class="loading">${message}</div>`;
-  }
-}
+// Enhanced API Request Handler
+async function makeAPIRequest(path, payload, retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
 
-/**
- * Show error message
- */
-function showError(element, message, details = "") {
-  if (element) {
-    element.innerHTML = `
-      <div class="error">
-        <p>${escapeHTML(message)}</p>
-        ${details ? `<small>${escapeHTML(details)}</small>` : ''}
-      </div>
-    `;
-  }
-}
-function showCharacterError(message, error = null) {
-  const errorContainer = document.getElementById('errorDisplay') || 
-                        document.createElement('div');
-  
-  errorContainer.id = 'errorDisplay';
-  errorContainer.className = 'error-message';
-  errorContainer.innerHTML = `
-    <h4>Character Generation Failed</h4>
-    <p>${escapeHTML(message)}</p>
-    ${error ? `<details><summary>Technical details</summary><pre>${escapeHTML(error.message)}</pre></details>` : ''}
-    <button onclick="location.reload()">Refresh Page</button>
-    <button onclick="retryGeneration()">Try Again</button>
-  `;
-  
-  if (!document.getElementById('errorDisplay')) {
-    document.body.appendChild(errorContainer);
-  }
-}
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/${path}`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${API_CONFIG.API_KEY}`
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
 
-// Example usage in your form handler:
-document.getElementById('characterForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Server error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      
+      // Validate response structure
+      if (path === 'chat' && (!data.choices?.[0]?.message?.content)) {
+        throw new Error("Invalid chat response format");
+      }
+      if (path === 'image' && (!data.data?.[0]?.url && !data.data?.[0]?.b64_json)) {
+        throw new Error("Invalid image response format");
+      }
+      
+      return data;
+    } catch (error) {
+      if (i === retries - 1) throw error;
+      console.warn(`Attempt ${i+1} failed, retrying...`, error);
+      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+    }
+  }
+}
+// Add this function to app.js
+async function generateCharacterDescription(formData) {
   try {
-    const formData = getFormData();
-    const character = await generateCharacter(formData);
-    window.location.href = 'character-creation.html';
-  } catch (error) {
-    showCharacterError("We couldn't create your character. Please check your connection and try again.", error);
-  }
-});
-/**
- * Disable/enable all buttons
- */
-function disableButtons(disable = true) {
-  document.querySelectorAll("button").forEach(btn => {
-    btn.disabled = disable;
-  });
-}
+    const prompt = `Create a vivid D&D character description for a ${formData.archetype} named ${formData.name}. 
+      They are level ${formData.level}. 
+      Background: ${formData.background}. 
+      Hair: ${formData.hair || 'not specified'}. 
+      Conflict attitude: ${formData.conflict}. 
+      Defining trait: ${formData.trait}. 
+      Companion: ${formData.companion}. 
+      Inner struggle: ${formData.struggle}.
+      
+      Describe their appearance, personality, and backstory in 3-4 sentences. 
+      Focus on visual details that would help an artist create a portrait. 
+      Use vivid, descriptive language.`;
 
-/* ======= API FUNCTIONS ======= */
-
-/**
- * Make API requests with error handling
- */
-async function makeAPIRequest(path, payload) {
-  try {
-    const response = await fetch(`/api/${path}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+    const response = await makeAPIRequest("chat", {
+      model: "hackathon/chat",
+      messages: [
+        {
+          role: "system",
+          content: "You are a creative fantasy writer who specializes in vivid character descriptions."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.8,
+      max_tokens: 300
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error?.message || `HTTP Error ${response.status}`);
+    const description = response.choices[0].message.content.trim();
+    
+    // Basic validation
+    if (!description || description.length < 50) {
+      throw new Error("Description generation failed - response too short");
     }
-
-    return await response.json();
+    
+    return description;
   } catch (error) {
-    console.error(`API request to ${path} failed:`, error);
-    throw new Error(`Network error: ${error.message}`);
+    console.error("Description generation failed:", error);
+    // Fallback description
+    return `${formData.name} is a ${formData.archetype} from ${formData.background}. ` +
+           `They have ${formData.hair || 'mysterious'} hair and are known for their ${formData.trait}. ` +
+           `Their companion is ${formData.companion} and they struggle with ${formData.struggle}.`;
   }
 }
-
-/**
- * Generate character description using AI
- */
-async function generateCharacter(characterData) {
-  const MAX_RETRIES = 2;
-  let retryCount = 0;
-  
-  while (retryCount < MAX_RETRIES) {
-    try {
-      // 1. Generate Description
-      const description = await generateCharacterDescription(characterData);
-      if (!description) throw new Error("Empty description generated");
-      
-      // 2. Generate Image
-      const imageUrl = await generateCharacterImage(description, characterData.archetype);
-      
-      // 3. Create Character Object
-      const character = {
-        name: characterData.name,
-        level: parseInt(characterData.level) || 1,
-        type: characterData.archetype,
-        description: description,
-        image: imageUrl,
-        stats: {
-          hp: 10 + (parseInt(characterData.level) || 1) * 5,
-          attack: 3 + (parseInt(characterData.level) || 1),
-          defense: 2 + (parseInt(characterData.level) || 1)
-        }
-      };
-      
-      // 4. Save Character
-      if (!saveCharacter(character)) {
-        throw new Error("Failed to save character");
-      }
-      
-      return character;
-      
-    } catch (error) {
-      console.error(`Attempt ${retryCount + 1} failed:`, error);
-      retryCount++;
-      
-      if (retryCount >= MAX_RETRIES) {
-        throw new Error(`Character generation failed after ${MAX_RETRIES} attempts: ${error.message}`);
-      }
-      
-      // Wait before retrying
-      await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
-    }
-  }
-}
-
-/**
- * Generate character image using AI
- */
+// Improved Image Generation
 async function generateCharacterImage(description, archetype) {
+  const prompt = `D&D ${archetype} character portrait: ${description.substring(0, 900)}. 
+    Fantasy art, digital painting, highly detailed, vibrant colors, character centered`;
+  
   try {
-    const prompt = `D&D ${archetype} character: ${description}. 
-      Fantasy art style, detailed, vibrant colors`;
-
-    const response = await makeAPIRequest("image", {
+    const response = await makeAPIRequest("image", {  // This should be a POST
       model: "hackathon/text2image",
       prompt: prompt,
       n: 1,
       size: "512x512",
-      quality: "standard"
+      quality: "hd",
+      style: "fantasy"
     });
 
-    // Handle different response formats
-    const imageData = response.data?.[0];
-    if (imageData?.url) {
-      return imageData.url;
-    } else if (imageData?.b64_json) {
-      return `data:image/png;base64,${imageData.b64_json}`;
-    } else {
-      throw new Error("No image data received");
-    }
+    // Handle both URL and base64 responses
+    const imageData = response.data[0];
+    const imageUrl = imageData?.url || 
+                   (imageData?.b64_json ? `data:image/png;base64,${imageData.b64_json}` : null);
+
+    if (!imageUrl) throw new Error("No image data received");
+
+    // Verify image loads
+    await verifyImageLoad(imageUrl);
+    return imageUrl;
   } catch (error) {
     console.error("Image generation failed:", error);
-    // Return placeholder if generation fails
-    return "https://via.placeholder.com/512";
+    return getLocalPlaceholder(archetype);
   }
 }
 
-/* ======= CHARACTER MANAGEMENT ======= */
-
-/**
- * Save character to local storage
- */
-function saveCharacter(character) {
-  try {
-    let characters = [];
-    const storedChars = localStorage.getItem('adndiCharacters');
-    
-    if (storedChars) {
-      characters = JSON.parse(storedChars);
-      if (!Array.isArray(characters)) {
-        characters = [];
-      }
-    }
-
-    characters.push(character);
-    localStorage.setItem('adndiCharacters', JSON.stringify(characters));
-    return true;
-  } catch (error) {
-    console.error("Failed to save character:", error);
-    return false;
-  }
-}
-
-/**
- * Load characters from local storage
- */
-function loadCharacters() {
-  try {
-    const storedChars = localStorage.getItem('adndiCharacters');
-    if (storedChars) {
-      const characters = JSON.parse(storedChars);
-      if (Array.isArray(characters)) {
-        appState.characters = characters;
-        return characters;
-      }
-    }
-    return [];
-  } catch (error) {
-    console.error("Failed to load characters:", error);
-    return [];
-  }
-}
-
-/* ======= GAME FUNCTIONS ======= */
-
-/**
- * Generate game story segment
- */
-async function generateStorySegment(theme, characters, previousEvents = [], diceRoll = null) {
-  try {
-    const prompt = `Continue this D&D adventure based on:
-      Theme: ${theme}
-      Characters: ${characters.map(c => `${c.name} (${c.type} level ${c.level})`).join(', ')}
-      ${previousEvents.length ? `Previous events: ${previousEvents.slice(-3).join(' ')}` : ''}
-      ${diceRoll ? `Last dice roll: ${diceRoll}` : ''}
-
-      Create the next part of the story with a clear narrative progression.`;
-
-    const response = await makeAPIRequest("chat", {
-      model: "hackathon/qwen3",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.8,
-      max_tokens: 500
-    });
-
-    return response.choices?.[0]?.message?.content || "The adventure continues...";
-  } catch (error) {
-    console.error("Story generation failed:", error);
-    throw error;
-  }
-}
-
-/**
- * Generate final story conclusion
- */
-async function generateFinalStory(theme, characters, storyEvents) {
-  try {
-    const prompt = `Conclude this D&D adventure:
-      Theme: ${theme}
-      Characters: ${characters.map(c => `${c.name} (${c.type} level ${c.level})`).join(', ')}
-      Story so far: ${storyEvents.join('\n\n')}
-
-      Write a satisfying conclusion to the adventure in 3-5 paragraphs.`;
-
-    const response = await makeAPIRequest("chat", {
-      model: "hackathon/qwen3",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.7,
-      max_tokens: 600
-    });
-
-    return response.choices?.[0]?.message?.content || "And so their adventure came to an end...";
-  } catch (error) {
-    console.error("Final story generation failed:", error);
-    throw error;
-  }
-}
-
-/* ======= UI FUNCTIONS ======= */
-
-/**
- * Render character cards
- */
-function renderCharacterCards(containerId) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-
-  const characters = loadCharacters();
-  container.innerHTML = '';
-
-  characters.forEach(character => {
-    const card = document.createElement('div');
-    card.className = 'character-card';
-    card.innerHTML = `
-      <img src="${character.image}" alt="${character.name}" onerror="this.src='https://via.placeholder.com/512'">
-      <h3>${character.name}</h3>
-      <p><strong>Level ${character.level} ${character.type}</strong></p>
-      <p>${character.description}</p>
-      <div class="character-stats">
-        <span>HP: ${character.stats.hp}</span>
-        <span>ATK: ${character.stats.attack}</span>
-        <span>DEF: ${character.stats.defense}</span>
-      </div>
-    `;
-    container.appendChild(card);
+async function verifyImageLoad(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(url);
+    img.onerror = () => reject(new Error("Image failed to load"));
+    img.src = url;
   });
 }
 
-/**
- * Initialize the application
- */
-function initApp() {
-  // Load any saved characters
-  loadCharacters();
+function getLocalPlaceholder(archetype) {
+  // SVG placeholder with class colors
+  const colors = {
+    barbarian: '#772422',
+    bard: '#5a3d7a',
+    cleric: '#e0a040',
+    druid: '#5c7c3a',
+    fighter: '#8a8a8a',
+    monk: '#d4b16a',
+    paladin: '#c0c0e0',
+    ranger: '#6b8c42',
+    rogue: '#735c3a',
+    sorcerer: '#8a2be2',
+    warlock: '#6a287e',
+    wizard: '#2a4b8d'
+  };
   
-  // Set up event listeners
-  document.addEventListener('DOMContentLoaded', () => {
-    // Character creation page
-    if (document.getElementById('characterCards')) {
-      renderCharacterCards('characterCards');
-    }
+  const color = colors[archetype.toLowerCase()] || '#4a2c82';
+  const initials = archetype.substring(0, 2).toUpperCase();
+  
+  return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+    <rect width="512" height="512" fill="${color}" />
+    <text x="256" y="256" font-family="Arial" font-size="120" 
+          fill="white" text-anchor="middle" dominant-baseline="middle">${initials}</text>
+  </svg>`;
+}
+
+// Character Generation Flow
+async function generateCharacter(characterData) {
+  try {
+    // Generate description
+    const description = await generateCharacterDescription(characterData);
     
-    // Other page-specific initializations...
+    // Generate image (with retries built into makeAPIRequest)
+    const imageUrl = await generateCharacterImage(description, characterData.archetype);
+    
+    return {
+      name: characterData.name,
+      level: parseInt(characterData.level) || 1,
+      type: characterData.archetype,
+      description: description,
+      image: imageUrl,
+      stats: generateCharacterStats(characterData),
+      createdAt: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error("Character generation failed:", error);
+    throw new Error("Character creation failed. Please try again.");
+  }
+}
+// Add to app.js
+const IMAGE_SERVICE = {
+    
+    async generateCharacterImage(description, archetype, characterId = null) {
+        try {
+            const response = await makeAPIRequest('generate-image', {
+                prompt: description,
+                archetype,
+                characterId
+            });
+
+            if (response.error) {
+                throw new Error(response.error);
+            }
+
+            // Verify and load image
+            const loadedUrl = await this.verifyImageLoad(response.url);
+            return {
+                url: loadedUrl,
+                isFallback: false,
+                ...response
+            };
+        } catch (error) {
+            console.error("Image generation failed:", error);
+            return {
+                ...this.getPlaceholderImage(archetype, description),
+                error: error.message
+            };
+        }
+    },
+
+    async verifyImageLoad(url, timeout = 10000) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            const timer = setTimeout(() => {
+                cleanup();
+                reject(new Error("Image load timed out"));
+            }, timeout);
+
+            const cleanup = () => {
+                clearTimeout(timer);
+                img.onload = img.onerror = null;
+                if (url.startsWith('blob:')) {
+                    URL.revokeObjectURL(url);
+                }
+            };
+
+            img.onload = () => {
+                cleanup();
+                resolve(url);
+            };
+            img.onerror = () => {
+                cleanup();
+                reject(new Error("Image failed to load"));
+            };
+            img.src = url;
+        });
+    },
+
+    getPlaceholderImage(archetype, description = '') {
+        const colors = {
+            barbarian: '#772422', bard: '#5a3d7a', cleric: '#e0a040',
+            druid: '#5c7c3a', fighter: '#8a8a8a', monk: '#d4b16a',
+            paladin: '#c0c0e0', ranger: '#6b8c42', rogue: '#735c3a',
+            sorcerer: '#8a2be2', warlock: '#6a287e', wizard: '#2a4b8d'
+        };
+        
+        const color = colors[archetype?.toLowerCase()] || '#4a2c82';
+        const initials = archetype?.substring(0, 2).toUpperCase() || 'CH';
+        const descWords = description?.split(' ').slice(0, 5).join(' ') || '';
+        
+        return {
+            url: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" 
+                width="512" height="512" viewBox="0 0 512 512">
+                <rect width="512" height="512" fill="${color}" />
+                <text x="256" y="220" font-family="Arial" font-size="120" 
+                    fill="white" text-anchor="middle">${initials}</text>
+                <text x="256" y="300" font-family="Arial" font-size="24" 
+                    fill="white" text-anchor="middle" width="400">${descWords}</text>
+            </svg>`,
+            isFallback: true
+        };
+    },
+
+    async prefetchImages(urls) {
+        const results = await Promise.allSettled(
+            urls.map(url => this.verifyImageLoad(url).catch(() => null))
+        );
+        
+        return results
+            .filter(result => result.status === 'fulfilled' && result.value)
+            .map(result => result.value);
+    }
+};
+// Initialize the app
+function initApp() {
+  document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('characterForm')) {
+      initCharacterForm();
+    }
+    if (document.getElementById('characterCards')) {
+      renderCharacterCards();
+    }
   });
 }
 
-// Initialize the application
 initApp();
+// Export the function if using modules
 
-/* ======= EXPORTS FOR MODULE USAGE ======= */
-// Note: Remove if not using modules
-export {
-  escapeHTML,
-  renderTextToHTML,
-  validateInput,
-  makeAPIRequest,
-  generateCharacterDescription,
-  generateCharacterImage,
-  saveCharacter,
-  loadCharacters,
-  generateStorySegment,
-  generateFinalStory,
-  renderCharacterCards
-};
+window.generateCharacterDescription = generateCharacterDescription;
+window.generateCharacterImage = generateCharacterImage;
+window.IMAGE_SERVICE = IMAGE_SERVICE;

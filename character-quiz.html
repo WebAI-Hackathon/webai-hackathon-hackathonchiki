@@ -112,85 +112,142 @@
             
             <button type="submit" class="btn-primary">Generate your character</button>
         </form>
+        <div id="errorDisplay" class="error-message" style="display: none;"></div>
     </div>
 
     <script src="js/app.js"></script>
     <script>
-        document.getElementById('characterForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = {
-                name: document.getElementById('characterName').value,
-                level: document.getElementById('characterLevel').value,
-                archetype: document.querySelector('input[name="archetype"]:checked').value,
-                background: document.getElementById('background').value,
-                hair: document.getElementById('hair').value,
-                conflict: document.querySelector('input[name="conflict"]:checked').value,
-                trait: document.querySelector('input[name="trait"]:checked').value,
-                companion: document.querySelector('input[name="companion"]:checked').value,
-                struggle: document.querySelector('input[name="struggle"]:checked').value
-            };
-            
-            // Generate character description
-            const descriptionPrompt = `Create a D&D character description based on these traits:
-                Name: ${formData.name}
-                Level: ${formData.level}
-                Class: ${formData.archetype}
-                Background: ${formData.background}
-                Hair: ${formData.hair}
-                Conflict attitude: ${formData.conflict}
-                Defining trait: ${formData.trait}
-                Companion: ${formData.companion}
-                Inner struggle: ${formData.struggle}
-                
-                Include physical appearance, personality, and abilities in 2-3 sentences.`;
-            
-            try {
-                // Call API to generate description
-                const descriptionResponse = await makeAPIRequest('chat', {
-                    model: "hackathon/qwen3",
-                    messages: [{ role: "user", content: descriptionPrompt }],
-                    temperature: 0.7
-                });
-                
-                const description = descriptionResponse.choices?.[0]?.message?.content || "A brave adventurer";
-                
-                // Generate character image
-                const imagePrompt = `D&D ${formData.archetype} character: ${description}, fantasy art style, detailed`;
-                const imageResponse = await makeAPIRequest('image', {
-                    model: "hackathon/text2image",
-                    prompt: imagePrompt,
-                    n: 1,
-                    size: "512x512"
-                });
-                
-                const imageUrl = imageResponse.data?.[0]?.url;
-                
-                // Create character object
-                const character = {
-                    name: formData.name,
-                    level: formData.level,
-                    type: formData.archetype,
-                    description: description,
-                    image: imageUrl,
-                    stats: {
-                        hp: 10 + parseInt(formData.level) * 5,
-                        attack: 3 + parseInt(formData.level),
-                        defense: 2 + parseInt(formData.level)
-                    }
-                };
-                
-                // Save character and redirect
-                let characters = JSON.parse(localStorage.getItem('adndiCharacters') || []);
-                characters.push(character);
-                localStorage.setItem('adndiCharacters', JSON.stringify(characters));
-                window.location.href = 'character-creation.html';
-                
-            } catch (error) {
-                console.error('Error generating character:', error);
-                alert('Failed to generate character. Please try again.');
-            }
-        });
+        
+    document.getElementById('characterForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Safely get elements with null checks
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const errorDisplay = document.getElementById('errorDisplay') || createErrorDisplay();
+    
+    try {
+        // Show loading state
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Generating...";
+        }
+        
+        if (errorDisplay) {
+            errorDisplay.style.display = 'none';
+            errorDisplay.textContent = '';
+        }
+        
+        // Collect and validate form data
+        const formData = getFormData();
+        validateFormData(formData);
+        
+        // Generate character
+        const character = await generateCharacterFromData(formData);
+        
+        // Save and redirect
+        saveCharacterToLocalStorage(character);
+        window.location.href = 'character-creation.html';
+        
+    } catch (error) {
+        console.error("Character generation failed:", error);
+        showError(errorDisplay, error.message);
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Generate your character";
+        }
+    }
+});
+
+// Helper function to create error display if it doesn't exist
+function createErrorDisplay() {
+    const errorDiv = document.createElement('div');
+    errorDiv.id = 'errorDisplay';
+    errorDiv.className = 'error-message';
+    document.querySelector('.container').appendChild(errorDiv);
+    return errorDiv;
+}
+
+// Improved error display function
+function showError(element, message) {
+    if (!element) return;
+    
+    element.innerHTML = `
+        <div class="error-content">
+            <p>${escapeHTML(message)}</p>
+            <button onclick="this.parentElement.style.display='none'">Dismiss</button>
+        </div>
+    `;
+    element.style.display = 'block';
+}
+
+// Form data collection with validation
+function getFormData() {
+    const form = document.getElementById('characterForm');
+    return {
+        name: form.querySelector('#characterName').value.trim(),
+        level: form.querySelector('#characterLevel').value,
+        archetype: form.querySelector('input[name="archetype"]:checked')?.value,
+        background: form.querySelector('#background').value,
+        hair: form.querySelector('#hair').value.trim(),
+        conflict: form.querySelector('input[name="conflict"]:checked')?.value,
+        trait: form.querySelector('input[name="trait"]:checked')?.value,
+        companion: form.querySelector('input[name="companion"]:checked')?.value,
+        struggle: form.querySelector('input[name="struggle"]:checked')?.value
+    };
+}
+
+function validateFormData(formData) {
+    const errors = [];
+    
+    if (!formData.name) errors.push("Character name is required");
+    if (!formData.archetype) errors.push("Please select a character archetype");
+    if (!formData.background) errors.push("Please select a background");
+    if (isNaN(formData.level) || formData.level < 1 || formData.level > 20) {
+        errors.push("Level must be between 1 and 20");
+    }
+    
+    if (errors.length > 0) {
+        throw new Error(errors.join("\n"));
+    }
+}
+
+// Character generation function
+async function generateCharacterFromData(formData) {
+    // Generate description
+    const description = await generateCharacterDescription(formData);
+    
+    // Generate image
+    const imageUrl = await generateCharacterImage(description, formData.archetype);
+    
+    return {
+        name: formData.name,
+        level: parseInt(formData.level),
+        type: formData.archetype,
+        description: description,
+        image: imageUrl,
+        stats: {
+            hp: 10 + parseInt(formData.level) * 5,
+            attack: 3 + parseInt(formData.level),
+            defense: 2 + parseInt(formData.level)
+        }
+    };
+}
+
+// Save to local storage
+function saveCharacterToLocalStorage(character) {
+    const savedChars = JSON.parse(localStorage.getItem('adndiCharacters') || "[]");
+    const characters = Array.isArray(savedChars) ? savedChars : [];
+    characters.push(character);
+    localStorage.setItem('adndiCharacters', JSON.stringify(characters));
+}
+
+// Utility function
+function escapeHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
     </script>
 </body>
 </html>
