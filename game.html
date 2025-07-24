@@ -98,6 +98,24 @@
         .status-poison { background-color: #8a2be2; color: white; }
         .status-boost { background-color: #32cd32; color: black; }
         .status-weak { background-color: #a9a9a9; color: white; }
+    /* VOIX tool styles */
+        .voix-tool {
+            background-color: rgba(116, 65, 31, 0.2);
+            border: 1px solid #69583e;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .voix-instructions {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #5c331f;
+        }
+        
+        .tool-element {
+            display: none; /* Hidden but accessible to VOIX */
+        }
     </style>
 </head>
 <body>
@@ -119,12 +137,22 @@
                     <button id="rollDice" class="btn-primary">Roll D20</button>
                 </div>
                 
-                <div class="voix-tool" id="voixTool">
-                    <h3>VOIX Decision Tool</h3>
-                    <textarea id="decisionInput" rows="4" placeholder="Describe your plan of action..."></textarea>
-                    <button id="submitDecision" class="btn-secondary">Submit Plan</button>
+                <div class="voix-tool">
+                    <h3>VOIX Integration</h3>
+                    <div class="voix-instructions">
+                        <p>Use VOIX commands to interact with the game:</p>
+                        <p>"Roll dice", "Attack enemy", "Use potion", "Cast spell", etc.</p>
+                    </div>
+                    <div id="voixStatus">Waiting for VOIX command...</div>
                 </div>
             </div>
+        </div>
+        
+        <!-- VOIX-accessible tool elements -->
+        <div class="tool-element">
+            <tool id="diceRoller" type="button">Roll Dice</tool>
+            <tool id="endGameButton" type="button">End Game</tool>
+            <tool id="playerAction" type="input">Describe your action</tool>
         </div>
         
         <div class="characters-container">
@@ -136,22 +164,29 @@
             <button id="endGame" class="btn-secondary">End Adventure</button>
         </div>
     </div>
+<section id="recapSection" style="display:none; padding: 20px;">
+  <h2>Your Epic Tale</h2>
+  <div id="finalStory" class="story-text"></div>
+  <img id="finalImage" src="" style="max-width:100%; margin-top: 20px;" alt="Final illustration">
+  <div style="text-align:center; margin-top:20px;">
+    <button id="restartGame" class="btn-primary">Play Again</button>
+  </div>
+</section>
 
     <script>
-        // Make API request function (copied from app.js)
+        // Make API request function
         async function makeAPIRequest(path, payload, retries = 3) {
             const API_CONFIG = {
                 BASE_URL: 'https://api.litviva.com/v1',
                 API_KEY: 'sk-RDjpy3tDOusiadmVRKXtbg',
                 TIMEOUT: 15000
             };
-            
+
             for (let i = 0; i < retries; i++) {
                 try {
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
 
-                    // Map paths to Litviva endpoints
                     const endpoint = 
                         path === 'chat' ? 'chat/completions' : 
                         path === 'image' ? 'images/generations' : 
@@ -176,23 +211,8 @@
 
                     const data = await response.json();
                     
-                    // Validate response structure
                     if (path === 'chat' && (!data.choices?.[0]?.message?.content)) {
                         throw new Error("Invalid chat response format");
-                    }
-                    if (path === 'image') {
-                        // Normalize image response
-                        const imageData = data.data?.[0];
-                        if (!imageData) throw new Error("No image data received");
-                        
-                        // Handle both URL and base64 responses
-                        if (imageData.url) {
-                            data.url = imageData.url;
-                        } else if (imageData.b64_json) {
-                            data.url = `data:image/png;base64,${imageData.b64_json}`;
-                        } else {
-                            throw new Error("Invalid image response format");
-                        }
                     }
                     
                     return data;
@@ -205,7 +225,6 @@
         }
 
         // Game state management
-        // Game state management
         let gameState = {
             characters: [],
             theme: '',
@@ -213,7 +232,9 @@
             currentScene: 0,
             diceResults: [],
             activePlayerIndex: 0,
-            gameOver: false
+            gameOver: false,
+            decisionMade: false,
+            actionType: null
         };
         
         // Initialize game
@@ -228,7 +249,7 @@
                 // Set theme title
                 document.getElementById('gameThemeTitle').textContent = gameState.theme;
                 
-                // Initialize character stats if missing
+                // Initialize character stats
                 gameState.characters.forEach(char => {
                     if (!char.stats) {
                         char.stats = {
@@ -236,10 +257,9 @@
                             maxHp: 10 + char.level * 5,
                             attack: 3 + char.level,
                             defense: 2 + char.level,
-                            statusEffects: []  // Ensure array exists
+                            statusEffects: []
                         };
                     }
-                    // Ensure statusEffects exists and is an array
                     if (!char.stats.statusEffects || !Array.isArray(char.stats.statusEffects)) {
                         char.stats.statusEffects = [];
                     }
@@ -248,6 +268,9 @@
                 // Render characters
                 renderCharacters();
                 
+                // Initialize VOIX tool integration
+                initVoixTools();
+                
                 // Generate initial story
                 await generateNextScene();
             } catch (e) {
@@ -255,6 +278,29 @@
                 document.getElementById('gameScript').innerHTML = 
                     '<div class="error">Failed to initialize game. Please try again.</div>';
             }
+        }
+        
+        // Initialize VOIX tool elements
+        function initVoixTools() {
+            // Dice roller tool
+            const diceRoller = document.getElementById('diceRoller');
+            diceRoller.addEventListener('click', () => {
+                document.getElementById('rollDice').click();
+            });
+            
+            // End game tool
+            const endGameButton = document.getElementById('endGameButton');
+            endGameButton.addEventListener('click', () => {
+                document.getElementById('endGame').click();
+            });
+            
+            // Player action tool
+            const playerAction = document.getElementById('playerAction');
+            playerAction.addEventListener('change', (e) => {
+                const command = e.target.value;
+                document.getElementById('voixStatus').textContent = `VOIX: "${command}"`;
+                processVoixCommand(command);
+            });
         }
         
         // Render character cards
@@ -317,6 +363,7 @@
         async function generateNextScene() {
             const storyElement = document.getElementById('gameScript');
             storyElement.innerHTML = '<div class="loading">Weaving the tale of your adventure...</div>';
+            gameState.decisionMade = false;
             
             try {
                 let prompt;
@@ -327,21 +374,21 @@
                             `${c.name} (Level ${c.level} ${c.type})`
                         ).join(', ')}.
                         Describe the setting, atmosphere, and initial challenge they face. 
-                        End with a dramatic lead-in to the first challenge requiring a D20 roll. 
+                        End with a dramatic lead-in to the first challenge. 
                         Make it vivid and immersive (3-4 sentences).`;
                 } else {
                     // Continuation scene
-                    const lastDiceResult = gameState.diceResults.length > 0 
-                        ? gameState.diceResults[gameState.diceResults.length - 1] 
-                        : 10;
+                    const lastAction = gameState.actionType === 'dice' ? 
+                        `rolled a ${gameState.diceResults[gameState.diceResults.length - 1]} on a D20` : 
+                        'used VOIX to describe an action';
                     
                     prompt = `Continue the D&D adventure with theme "${gameState.theme}".
                         Previous events: ${gameState.story.slice(-2).join(' ')}
                         The party consists of: ${gameState.characters.map(c => 
                             `${c.name} (Level ${c.level} ${c.type} - HP: ${c.stats.hp}/${c.stats.maxHp})`
                         ).join(', ')}.
-                        The players just rolled a ${lastDiceResult} on a D20.
-                        Describe what happens next and set up the next challenge requiring a D20 roll. 
+                        The player ${lastAction}.
+                        Describe what happens next and set up the next challenge. 
                         Include elements like combat, exploration, or puzzle solving. 
                         Make it 3-4 sentences long.`;
                 }
@@ -400,27 +447,189 @@
             const storyElement = document.getElementById('gameScript');
             const decisionDiv = document.createElement('div');
             decisionDiv.className = 'decision-point';
+            
+            const actionType = gameState.actionType === 'voix' ? 
+                'VOIX action' : 'dice roll';
+            
             decisionDiv.innerHTML = `
                 <p><strong>Decision Point</strong></p>
                 <p>${gameState.characters[gameState.activePlayerIndex].name} must take action!</p>
-                <p>Roll the D20 dice or use the VOIX Tool to describe your plan.</p>
+                <p>Use VOIX to describe your action or click "Roll D20" for a random outcome.</p>
+                <p>Last action: ${actionType}</p>
             `;
             storyElement.appendChild(decisionDiv);
-            
-            // Show VOIX tool
-            document.getElementById('voixTool').style.display = 'block';
             
             // Highlight active player
             renderCharacters();
         }
         
-         
+        // Process VOIX command
+        async function processVoixCommand(command) {
+            if (gameState.decisionMade || gameState.gameOver) return;
+            
+            gameState.decisionMade = true;
+            gameState.actionType = 'voix';
+            
+            // Display command in story
+            appendToStory("voix-action", `${gameState.characters[gameState.activePlayerIndex].name}: "${command}"`);
+            
+            // Determine action type
+            const actionType = await determineActionType(command);
+            
+            if (actionType === 'dice') {
+                // VOIX command is converted to dice roll
+                simulateDiceRoll();
+            } else {
+                // Process as VOIX narrative action
+                try {
+                    const prompt = `In the D&D adventure with theme "${gameState.theme}", 
+                        the player ${gameState.characters[gameState.activePlayerIndex].name} decides to: "${command}".
+                        Describe the outcome of this decision in 2-3 sentences.`;
+                    
+                    const response = await makeAPIRequest('chat', {
+                        model: "hackathon/qwen3",
+                        messages: [{ role: "user", content: prompt }],
+                        temperature: 0.8
+                    });
+                    
+                    let outcomeText = "The plan unfolds...";
+                    if (response.choices && response.choices.length > 0) {
+                        outcomeText = response.choices[0].message.content;
+                    }
+                    
+                    // Add to story
+                    gameState.story.push(outcomeText);
+                    
+                    // Display outcome
+                    const outcomeDiv = document.createElement('div');
+                    outcomeDiv.innerHTML = `<p>${outcomeText}</p>`;
+                    document.getElementById('gameScript').appendChild(outcomeDiv);
+                    
+                    // Apply status effects based on command
+                    applyVoixEffects(command);
+                    
+                } catch (error) {
+                    console.error('Error processing VOIX command:', error);
+                    appendToStory("error", "Failed to process your VOIX command. Please try again.");
+                }
+                
+                // Generate next scene
+                await generateNextScene();
+            }
+        }
+        
+        // Determine action type (dice or VOIX)
+        async function determineActionType(command) {
+            try {
+                const response = await makeAPIRequest('chat', {
+                    model: "hackathon/qwen3",
+                    messages: [{
+                        role: "user",
+                        content: `In a D&D game, the player says: "${command}". 
+                                  Should this be resolved with a dice roll (dice) or as a narrative action (voix)?
+                                  Respond ONLY with "dice" or "voix".`
+                    }],
+                    temperature: 0.3
+                });
+                
+                if (response.choices && response.choices.length > 0) {
+                    const decision = response.choices[0].message.content.trim().toLowerCase();
+                    return (decision === 'voix') ? 'voix' : 'dice';
+                }
+            } catch (error) {
+                console.error('Error deciding action type:', error);
+            }
+            return 'dice'; // Fallback to dice
+        }
+        
+        // Apply effects based on VOIX command
+        function applyVoixEffects(command) {
+            const character = gameState.characters[gameState.activePlayerIndex];
+            const stats = character.stats;
+            
+            // Ensure statusEffects exists
+            if (!stats.statusEffects || !Array.isArray(stats.statusEffects)) {
+                stats.statusEffects = [];
+            }
+            
+            // Check for common actions
+            if (command.toLowerCase().includes('attack')) {
+                // Simulate attack damage
+                const damage = Math.floor(Math.random() * 8) + 2;
+                stats.attack += 1;
+                appendToStory("system", `${character.name} gains +1 attack from battle experience!`);
+            }
+            else if (command.toLowerCase().includes('heal') || command.toLowerCase().includes('potion')) {
+                // Apply healing
+                const healAmount = Math.floor(Math.random() * 10) + 5;
+                stats.hp = Math.min(stats.maxHp, stats.hp + healAmount);
+                appendToStory("system", `${character.name} restores ${healAmount} HP!`);
+            }
+            else if (command.toLowerCase().includes('defend') || command.toLowerCase().includes('shield')) {
+                // Apply defense boost
+                stats.defense += 2;
+                if (!stats.statusEffects.some(e => e.name === "Shielded")) {
+                    stats.statusEffects.push({
+                        name: "Shielded",
+                        type: "boost",
+                        duration: 3
+                    });
+                    appendToStory("system", `${character.name} gains a defensive shield!`);
+                }
+            }
+            else if (command.toLowerCase().includes('cast') || command.toLowerCase().includes('spell')) {
+                // Apply magic effect
+                if (!stats.statusEffects.some(e => e.name === "Empowered")) {
+                    stats.statusEffects.push({
+                        name: "Empowered",
+                        type: "boost",
+                        duration: 2
+                    });
+                    appendToStory("system", `${character.name}'s magic empowers the party!`);
+                }
+            }
+        }
+        
+        // Append to story panel
+        function appendToStory(className, text) {
+            const storyElement = document.getElementById('gameScript');
+            const p = document.createElement('p');
+            p.className = className;
+            p.textContent = text;
+            storyElement.appendChild(p);
+            storyElement.scrollTop = storyElement.scrollHeight;
+        }
+        
         // Roll a D20 die
         function rollD20() {
             return Math.floor(Math.random() * 20) + 1;
         }
         
-        // Update character stats based on dice roll - FIXED
+        // Simulate dice roll programmatically
+        function simulateDiceRoll() {
+            const roll = rollD20();
+            const diceElement = document.getElementById('diceResult');
+            
+            // Show rolling animation
+            diceElement.textContent = 'Rolling...';
+            diceElement.classList.add('dice-animation');
+            
+            setTimeout(() => {
+                diceElement.classList.remove('dice-animation');
+                diceElement.textContent = `${gameState.characters[gameState.activePlayerIndex].name} rolled: ${roll}`;
+                
+                // Process dice roll
+                gameState.actionType = 'dice';
+                gameState.diceResults.push(roll);
+                updateCharacterStats(roll);
+                renderCharacters();
+                
+                // Generate next scene
+                generateNextScene();
+            }, 1500);
+        }
+        
+        // Update character stats based on dice roll
         function updateCharacterStats(roll) {
             const character = gameState.characters[gameState.activePlayerIndex];
             const stats = character.stats;
@@ -430,11 +639,15 @@
                 stats.statusEffects = [];
             }
             
+            // Add dice roll to story
+            appendToStory("dice-roll", `${character.name} rolls a D20: ${roll}`);
+            
             // Determine effect based on roll
             if (roll >= 18) {
                 // Critical success
                 stats.hp = Math.min(stats.hp + 5, stats.maxHp);
                 stats.attack += 2;
+                appendToStory("system", `${character.name} scores a critical success! +5 HP, +2 attack`);
                 
                 // Add boost status effect
                 if (!stats.statusEffects.some(e => e.name === "Inspired")) {
@@ -449,24 +662,28 @@
                 // Great success
                 stats.hp = Math.min(stats.hp + 3, stats.maxHp);
                 stats.attack += 1;
+                appendToStory("system", `${character.name} succeeds! +3 HP, +1 attack`);
                 
             } else if (roll >= 10) {
                 // Success
                 stats.hp = Math.min(stats.hp + 1, stats.maxHp);
+                appendToStory("system", `${character.name} succeeds! +1 HP`);
                 
             } else if (roll >= 6) {
                 // Neutral
-                // No change
+                appendToStory("system", `${character.name}'s attempt has no significant effect`);
                 
             } else if (roll >= 3) {
                 // Failure
                 const damage = Math.max(1, Math.floor(Math.random() * 4) + 1);
                 stats.hp = Math.max(0, stats.hp - damage);
+                appendToStory("system", `${character.name} fails! Takes ${damage} damage`);
                 
             } else {
                 // Critical failure
                 const damage = Math.max(1, Math.floor(Math.random() * 6) + 2);
                 stats.hp = Math.max(0, stats.hp - damage);
+                appendToStory("system", `${character.name} critically fails! Takes ${damage} damage`);
                 
                 // Add poison status effect
                 if (!stats.statusEffects.some(e => e.name === "Poisoned")) {
@@ -475,26 +692,24 @@
                         type: "poison",
                         duration: 2
                     });
+                    appendToStory("system", `${character.name} has been poisoned!`);
                 }
             }
             
-            // Process status effects - FIXED: added null check
-            if (stats.statusEffects && Array.isArray(stats.statusEffects)) {
-                stats.statusEffects.forEach(effect => {
-                    if (effect.duration !== undefined) {
-                        effect.duration -= 1;
-                    }
-                    // Apply effect consequences
-                    if (effect.type === "poison" && effect.duration > 0) {
-                        stats.hp = Math.max(0, stats.hp - 2);
-                    }
-                });
-                
-                // Remove expired effects
-                stats.statusEffects = stats.statusEffects.filter(e => 
-                    e.duration === undefined || e.duration > 0
-                );
-            }
+            // Process status effects
+            stats.statusEffects.forEach(effect => {
+                if (effect.duration !== undefined) {
+                    effect.duration -= 1;
+                }
+                if (effect.type === "poison" && effect.duration > 0) {
+                    stats.hp = Math.max(0, stats.hp - 2);
+                }
+            });
+            
+            // Remove expired effects
+            stats.statusEffects = stats.statusEffects.filter(e => 
+                e.duration === undefined || e.duration > 0
+            );
             
             // Check for character death
             if (stats.hp <= 0) {
@@ -503,6 +718,7 @@
                     type: "weak",
                     duration: Infinity
                 }];
+                appendToStory("system", `${character.name} falls unconscious!`);
             }
             
             // Check for game over
@@ -531,107 +747,63 @@
         }
         
         // Event listeners
-        document.getElementById('rollDice').addEventListener('click', async () => {
-            if (gameState.gameOver) return;
+        document.getElementById('rollDice').addEventListener('click', () => {
+            if (gameState.decisionMade || gameState.gameOver) return;
             
-            const roll = rollD20();
-            const diceElement = document.getElementById('diceResult');
-            
-            // Show rolling animation
-            diceElement.textContent = 'Rolling...';
-            diceElement.classList.add('dice-animation');
-            document.getElementById('rollDice').disabled = true;
-            document.getElementById('voixTool').style.display = 'none';
-            
-            // After animation, show result
-            setTimeout(async () => {
-                diceElement.classList.remove('dice-animation');
-                diceElement.textContent = `${gameState.characters[gameState.activePlayerIndex].name} rolled: ${roll}`;
-                
-                // Save result
-                gameState.diceResults.push(roll);
-                
-                // Update character stats
-                updateCharacterStats(roll);
-                
-                // Render updated characters
-                renderCharacters();
-                
-                // Generate next scene
-                await generateNextScene();
-                
-                // Re-enable the button
-                document.getElementById('rollDice').disabled = false;
-                
-                // Check for game over
-                if (gameState.gameOver) {
-                    document.getElementById('gameScript').innerHTML += 
-                        '<div class="decision-point"><p>The adventure ends here as your party has been defeated...</p></div>';
-                    document.getElementById('rollDice').disabled = true;
-                    document.getElementById('voixTool').style.display = 'none';
-                }
-            }, 1500);
+            gameState.decisionMade = true;
+            gameState.actionType = 'dice';
+            simulateDiceRoll();
         });
         
-        document.getElementById('submitDecision').addEventListener('click', async () => {
-            if (gameState.gameOver) return;
-            
-            const decision = document.getElementById('decisionInput').value.trim();
-            if (!decision) return;
-            
-            document.getElementById('submitDecision').disabled = true;
-            document.getElementById('decisionInput').value = '';
-            
-            const storyElement = document.getElementById('gameScript');
-            storyElement.innerHTML += `<p><strong>${gameState.characters[gameState.activePlayerIndex].name}'s Plan:</strong> ${decision}</p>`;
-            
-            try {
-                // Generate outcome based on decision
-                const prompt = `In the D&D adventure with theme "${gameState.theme}", 
-                    the player ${gameState.characters[gameState.activePlayerIndex].name} decides to: "${decision}".
-                    Describe the outcome of this decision in 2-3 sentences, then set up the next challenge requiring a D20 roll.`;
-                
-                const response = await makeAPIRequest('chat', {
-                    model: "hackathon/qwen3",
-                    messages: [{ role: "user", content: prompt }],
-                    temperature: 0.8
-                });
-                
-                let outcomeText = "The plan unfolds...";
-                if (response.choices && response.choices.length > 0) {
-                    outcomeText = response.choices[0].message.content;
-                }
-                
-                // Add to story
-                gameState.story.push(outcomeText);
-                
-                // Display outcome
-                const outcomeDiv = document.createElement('div');
-                outcomeDiv.innerHTML = `<p>${outcomeText}</p>`;
-                storyElement.appendChild(outcomeDiv);
-                
-                // Show next decision point
-                showDecisionPoint();
-                
-            } catch (error) {
-                console.error('Error processing decision:', error);
-                storyElement.innerHTML += '<p class="error">Failed to process your decision. Please try again.</p>';
-            }
-            
-            document.getElementById('submitDecision').disabled = false;
+        document.getElementById('endGame').addEventListener('click', async () => {
+    const finalStory = gameState.story.join('\n\n');
+    const prompt = `Create an epic fantasy illustration that represents this story: "${finalStory}"`;
+
+    try {
+        const imageRes = await makeAPIRequest('image', {
+            prompt,
+            n: 1,
+            size: "1024x1024"
         });
-        
-        document.getElementById('endGame').addEventListener('click', () => {
-            // Save final story state
-            localStorage.setItem('adndiFinalStory', JSON.stringify({
-                theme: gameState.theme,
-                characters: gameState.characters,
-                story: gameState.story.join('\n\n')
-            }));
-            
-            // Go to final story page
-            window.location.href = 'final-story.html';
-        });
+
+        const imageUrl = imageRes?.data?.[0]?.url || '';
+
+        // Store to localStorage (optional but good for replay)
+        localStorage.setItem('adndiFinalStory', JSON.stringify({
+            theme: gameState.theme,
+            characters: gameState.characters,
+            story: finalStory,
+            image: imageUrl
+        }));
+
+        // Show recap
+        showRecap(finalStory, imageUrl);
+    } catch (e) {
+        console.error('Failed to generate final image:', e);
+        showRecap(finalStory, '');
+    }
+});
+function showRecap(story, imageUrl) {
+    document.getElementById('gameSection').style.display = 'none';
+    document.getElementById('recapSection').style.display = 'block';
+
+    document.getElementById('finalStory').textContent = story;
+    const img = document.getElementById('finalImage');
+    if (imageUrl) {
+        img.src = imageUrl;
+        img.alt = "Illustration of your journey";
+        img.style.display = 'block';
+    } else {
+        img.style.display = 'none';
+    }
+}
+document.getElementById('restartGame').addEventListener('click', () => {
+    localStorage.removeItem('adndiFinalStory');
+    document.getElementById('recapSection').style.display = 'none';
+    document.getElementById('gameSection').style.display = 'block';
+    location.reload(); // Or re-run initGame() if you want to avoid full reload
+});
+
         
         // Start the game
         initGame();
