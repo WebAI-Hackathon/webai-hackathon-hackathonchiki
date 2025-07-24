@@ -92,7 +92,7 @@ async function generateCharacterDescription(formData) {
       Companion: ${formData.companion}. 
       Inner struggle: ${formData.struggle}.
       
-      Describe their appearance, personality, and backstory in 3-4 sentences. 
+      Describe their appearance, personality, and backstory in 1-2 sentences. 
       Focus on visual details that would help an artist create a portrait. 
       Use vivid, descriptive language.`;
 
@@ -101,7 +101,7 @@ async function generateCharacterDescription(formData) {
       messages: [
         {
           role: "system",
-          content: "You are a creative fantasy writer who specializes in vivid character descriptions."
+          content: "You are a creative fantasy writer who specializes in vivid character descriptions. /no_think"
         },
         {
           role: "user",
@@ -109,7 +109,6 @@ async function generateCharacterDescription(formData) {
         }
       ],
       temperature: 0.7,
-      max_tokens: 300
     });
 
     const description = response.choices[0].message.content.trim();
@@ -132,7 +131,7 @@ async function generateCharacterDescription(formData) {
 // Improved Image Generation
 async function generateCharacterImage(description, archetype) {
   const prompt = `D&D ${archetype} character portrait: ${description.substring(0, 900)}. 
-    Fantasy art, digital painting, highly detailed, vibrant colors, character centered`;
+    Fantasy art, digital painting, highly detailed, vibrant colors, character centered, variation-${Math.random()}`;
   
   try {
     const response = await makeAPIRequest("image", {  // This should be a POST
@@ -143,17 +142,32 @@ async function generateCharacterImage(description, archetype) {
       quality: "hd",
       style: "fantasy"
     });
-
-    // Handle both URL and base64 responses
     const imageData = response.data[0];
-    const imageUrl = imageData?.url || 
-                   (imageData?.b64_json ? `data:image/png;base64,${imageData.b64_json}` : null);
-    console.log(imageUrl, imageData);
+    let imageUrl = null;
+
+    // Handle URL-based response
+    if (imageData?.url) {
+      imageUrl = imageData.url;
+    } 
+    // Handle base64 response
+    else if (imageData?.b64_json) {
+      imageUrl = `data:image/png;base64,${imageData.b64_json}`;
+      
+      // Validate base64 format
+      if (!/^[A-Za-z0-9+/]+={0,2}$/.test(imageData.b64_json)) {
+        throw new Error("Invalid base64 image data");
+      }
+    }
+
     if (!imageUrl) throw new Error("No image data received");
 
-    // Verify image loads
+    // Verify image loads successfully
     await verifyImageLoad(imageUrl);
     return imageUrl;
+    // Handle both URL and base64 responses
+    
+
+
   } catch (error) {
     console.error("Image generation failed:", error);
     return getLocalPlaceholder(archetype);
@@ -190,10 +204,7 @@ function getLocalPlaceholder(archetype) {
   const initials = archetype.substring(0, 2).toUpperCase();
   
   return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-    <rect width="512" height="512" fill="${color}" />
-    <text x="256" y="256" font-family="Arial" font-size="120" 
-          fill="white" text-anchor="middle" dominant-baseline="middle">${initials}</text>
-  </svg>`;
+    <rect width="512" height="512" fill="${color}" />`;
 }
 
 // Character Generation Flow
@@ -291,14 +302,7 @@ const IMAGE_SERVICE = {
         const descWords = description?.split(' ').slice(0, 5).join(' ') || '';
         
         return {
-            url: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" 
-                width="512" height="512" viewBox="0 0 512 512">
-                <rect width="512" height="512" fill="${color}" />
-                <text x="256" y="220" font-family="Arial" font-size="120" 
-                    fill="white" text-anchor="middle">${initials}</text>
-                <text x="256" y="300" font-family="Arial" font-size="24" 
-                    fill="white" text-anchor="middle" width="400">${descWords}</text>
-            </svg>`,
+            url: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" `,
             isFallback: true
         };
     },
@@ -314,10 +318,7 @@ const IMAGE_SERVICE = {
     }
 };
 // Initialize the app
-function initApp() {
-  // Emptying the cache and localStorage
-  localStorage.clear();
-
+/*function initApp() {
   document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('characterForm')) {
       initCharacterForm();
@@ -330,7 +331,7 @@ function initApp() {
 
 initApp();
 // Export the function if using modules
-
+*/
 window.generateCharacterDescription = generateCharacterDescription;
 window.generateCharacterImage = generateCharacterImage;
 window.IMAGE_SERVICE = IMAGE_SERVICE;

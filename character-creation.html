@@ -1,93 +1,101 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ADnDI - Character Creation</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Let's create your characters!</h1>
+      <div id="characterCards" class="cards-container"></div>
 
-</head>
-<body>
-    <div class="container" style="text-align: center;">
-        <h1>Let's create your characters!</h1>
-        <div id="characterCards" class="cards-container"></div>
-        
-        <div class="actions">
-            <button id="createCharacter" class="btn-primary">Create new character</button><br>
-            <button id="nextStep" class="btn-secondary" disabled>Next step</button>
-        </div>
+      <div class="actions">
+        <button id="createCharacter" class="btn-primary">
+          Create new character
+        </button>
+        <button id="nextStep" class="btn-secondary" disabled>Next step</button>
+      </div>
     </div>
 
     <script src="js/app.js"></script>
-    <script>let characters = [];
-const maxCharacters = 4;
+    <script>
+      let characters = [];
+      const maxCharacters = 4;
 
-document.getElementById('createCharacter').addEventListener('click', () => {
-    if (characters.length < maxCharacters) {
-        window.location.href = 'character-quiz.html';
-    } else {
-        alert(`Maximum of ${maxCharacters} characters allowed`);
-    }
-});
+      document
+        .getElementById("createCharacter")
+        .addEventListener("click", () => {
+          if (characters.length < maxCharacters) {
+            window.location.href = "character-quiz.html";
+          } else {
+            alert(`Maximum of ${maxCharacters} characters allowed`);
+          }
+        });
 
-document.getElementById('nextStep').addEventListener('click', () => {
-    if (characters.length > 0) {
-        localStorage.setItem('adndiCharacters', JSON.stringify(characters));
-        window.location.href = 'game-theme.html';
-    }
-});
+      document.getElementById("nextStep").addEventListener("click", () => {
+        if (characters.length > 0) {
+          localStorage.setItem("adndiCharacters", JSON.stringify(characters));
+          window.location.href = "game-theme.html";
+        }
+      });
 
-// Helper function to truncate description
-function truncateDescription(text, maxLength = 100) {
-    if (text.length <= maxLength) return escapeHTML(text);
-    return escapeHTML(text.substring(0, maxLength)) + '...';
-}
+      // Helper function to truncate description
+      function truncateDescription(text, maxLength = 100) {
+        if (text.length <= maxLength) return escapeHTML(text);
+        return escapeHTML(text.substring(0, maxLength)) + "...";
+      }
 
-// Load any existing characters
-function loadCharacters() {
-    const savedChars = localStorage.getItem('adndiCharacters');
-    if (savedChars) {
-        try {
+      // Load any existing characters
+      function loadCharacters() {
+        const savedChars = localStorage.getItem("adndiCharacters");
+        if (savedChars) {
+          try {
             characters = JSON.parse(savedChars);
             // Enable next step button if we have characters
-            document.getElementById('nextStep').disabled = characters.length === 0;
+            document.getElementById("nextStep").disabled =
+              characters.length === 0;
             renderCharacterCards();
-        } catch (e) {
+          } catch (e) {
             console.error("Error loading characters:", e);
-            localStorage.removeItem('adndiCharacters');
+            localStorage.removeItem("adndiCharacters");
+          }
         }
-    }
-}
+      }
 
-async function renderCharacterCards() {
-    const container = document.getElementById('characterCards');
-    container.innerHTML = '';
-    
-    if (characters.length === 0) {
-        container.innerHTML = '<p class="empty-message">No characters created yet</p>';
-        return;
-    }
-    
-    // Show loading state
-    container.innerHTML = '<div class="loading-spinner large"></div>';
-    
-    try {
-        // Prefetch images
-        const imageUrls = characters.map(char => char.image);
-        const loadedUrls = await IMAGE_SERVICE.prefetchImages(imageUrls);
-        const validUrls = new Set(loadedUrls);
-        
-        // Render cards
-        container.innerHTML = '';
-        characters.forEach((char, index) => {
-            const displayImage = validUrls.has(char.image) ? 
-                { url: char.image, isFallback: false } : 
-                IMAGE_SERVICE.getPlaceholderImage(char.type, char.description);
-            
-            const card = document.createElement('div');
-            card.className = `character-card ${displayImage.isFallback ? 'fallback-image' : ''}`;
+      async function renderCharacterCards() {
+        const container = document.getElementById("characterCards");
+        container.innerHTML = "";
+
+        if (characters.length === 0) {
+          container.innerHTML =
+            '<p class="empty-message">No characters created yet</p>';
+          return;
+        }
+
+        // Show loading state
+        container.innerHTML = '<div class="loading-spinner large"></div>';
+
+        try {
+          // Prefetch images
+          const imageUrls = characters.map((char) => char.image);
+          const loadedUrls = await IMAGE_SERVICE.prefetchImages(imageUrls);
+          const validUrls = new Set(loadedUrls);
+
+          // Render cards
+          container.innerHTML = "";
+          characters.forEach((char, index) => {
+            const displayImage = validUrls.has(char.image)
+              ? { url: char.image, isFallback: false }
+              : IMAGE_SERVICE.getPlaceholderImage(char.type, char.description);
+
+            const card = document.createElement("div");
+            card.className = `character-card ${
+              displayImage.isFallback ? "fallback-image" : ""
+            }`;
             card.dataset.index = index;
-            
+
             card.innerHTML = `
                 <div class="card-actions">
                     <button class="card-btn delete-btn" title="Delete character">🗑️</button>
@@ -97,124 +105,138 @@ async function renderCharacterCards() {
                     <img src="${displayImage.url}" alt="${char.name}" 
                         loading="lazy"
                         data-original-src="${char.image}"
-                        onerror="this.onerror=null;this.src='${IMAGE_SERVICE.getPlaceholderImage(char.type).url}'">
+                        onerror="this.onerror=null;this.src='${
+                          IMAGE_SERVICE.getPlaceholderImage(char.type).url
+                        }'">
                 </div>
                 <div class="card-content">
                     <h3>${escapeHTML(char.name)}</h3>
                     <p><strong>Level:</strong> ${char.level}</p>
                     <p><strong>Type:</strong> ${char.type}</p>
-                    <div class="description-preview">${truncateDescription(char.description)}</div>
+                    <div class="description-preview">${
+                      char.description}</div>
                 </div>
             `;
             container.appendChild(card);
-        });
-        
-        // Add event listeners for buttons
-        document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const index = parseInt(e.target.closest('.character-card').dataset.index);
-                deleteCharacter(index);
+          });
+
+          // Add event listeners for buttons
+          document.querySelectorAll(".delete-btn").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              const index = parseInt(
+                e.target.closest(".character-card").dataset.index
+              );
+              deleteCharacter(index);
             });
-        });
-        
-        document.querySelectorAll('.regenerate-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const index = parseInt(e.target.closest('.character-card').dataset.index);
-                regenerateCharacterImage(index);
+          });
+
+          document.querySelectorAll(".regenerate-btn").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              const index = parseInt(
+                e.target.closest(".character-card").dataset.index
+              );
+              regenerateCharacterImage(index);
             });
-        });
-        
-    } catch (error) {
-        console.error("Error rendering characters:", error);
-        container.innerHTML = '<p class="error-message">Failed to load characters. Please refresh.</p>';
-    }
-}
+          });
+        } catch (error) {
+          console.error("Error rendering characters:", error);
+          container.innerHTML =
+            '<p class="error-message">Failed to load characters. Please refresh.</p>';
+        }
+      }
 
-function deleteCharacter(index) {
-    if (confirm(`Delete ${characters[index].name}?`)) {
-        characters.splice(index, 1);
-        localStorage.setItem('adndiCharacters', JSON.stringify(characters));
-        document.getElementById('nextStep').disabled = characters.length === 0;
-        renderCharacterCards();
-    }
-}
+      function deleteCharacter(index) {
+        if (confirm(`Delete ${characters[index].name}?`)) {
+          characters.splice(index, 1);
+          localStorage.setItem("adndiCharacters", JSON.stringify(characters));
+          document.getElementById("nextStep").disabled =
+            characters.length === 0;
+          renderCharacterCards();
+        }
+      }
 
-async function regenerateCharacterImage(index) {
-    const char = characters[index];
-    try {
-        showLoadingState(index, true);
-        
-        // Generate new image
-        const newImage = await generateCharacterImage(char.description, char.type);
-        
-        // Update character
-        characters[index].image = newImage;
-        localStorage.setItem('adndiCharacters', JSON.stringify(characters));
-        
-        renderCharacterCards();
-    } catch (error) {
-        console.error("Regeneration failed:", error);
-        alert("Failed to regenerate image. Please try again.");
-        showLoadingState(index, false);
-    }
-}
-
-function showLoadingState(index, isLoading) {
-    const card = document.querySelector(`.character-card[data-index="${index}"]`);
-    if (!card) return;
-    
-    const imgContainer = card.querySelector('.card-image-container');
-    if (isLoading) {
-        imgContainer.innerHTML = '<div class="loading-spinner"></div>';
-    } else {
+      async function regenerateCharacterImage(index) {
         const char = characters[index];
-        imgContainer.innerHTML = `
-            <img src="${char.image}" alt="${char.name}" 
-                 onerror="this.onerror=null;this.src='${getClassPlaceholder(char.type)}'">
+        try {
+          showLoadingState(index, true);
+
+          // Generate new image
+          const newImage = await generateCharacterImage(
+            char.description,
+            char.type
+          );
+
+          // Update character
+          characters[index].image = newImage;
+          localStorage.setItem("adndiCharacters", JSON.stringify(characters));
+
+          renderCharacterCards();
+        } catch (error) {
+          console.error("Regeneration failed:", error);
+          alert("Failed to regenerate image. Please try again.");
+          showLoadingState(index, false);
+        }
+      }
+
+      function showLoadingState(index, isLoading) {
+        const card = document.querySelector(
+          `.character-card[data-index="${index}"]`
+        );
+        if (!card) return;
+
+        const imgContainer = card.querySelector(".card-image-container");
+        if (isLoading) {
+          imgContainer.innerHTML = '<div class="loading-spinner"></div>';
+        } else {
+          const char = characters[index];
+          imgContainer.innerHTML = `
+            <img src="${char.image}" alt="${char.name}">
         `;
-    }
-}
+        }
+      }
+/*
+      function getClassPlaceholder(archetype) {
+        // SVG placeholder with class colors
+        const colors = {
+          barbarian: "#772422",
+          bard: "#5a3d7a",
+          cleric: "#e0a040",
+          druid: "#5c7c3a",
+          fighter: "#8a8a8a",
+          monk: "#d4b16a",
+          paladin: "#c0c0e0",
+          ranger: "#6b8c42",
+          rogue: "#735c3a",
+          sorcerer: "#8a2be2",
+          warlock: "#6a287e",
+          wizard: "#2a4b8d",
+        };
 
-function getClassPlaceholder(archetype) {
-    // SVG placeholder with class colors
-    const colors = {
-        barbarian: '#772422',
-        bard: '#5a3d7a',
-        cleric: '#e0a040',
-        druid: '#5c7c3a',
-        fighter: '#8a8a8a',
-        monk: '#d4b16a',
-        paladin: '#c0c0e0',
-        ranger: '#6b8c42',
-        rogue: '#735c3a',
-        sorcerer: '#8a2be2',
-        warlock: '#6a287e',
-        wizard: '#2a4b8d'
-    };
-    
-    const color = colors[archetype.toLowerCase()] || '#4a2c82';
-    const initials = archetype.substring(0, 2).toUpperCase();
-    
-    return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"  height="512" viewBox="0 0 512 512">
+        const color = colors[archetype.toLowerCase()] || "#4a2c82";
+
+        return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"  height="512" viewBox="0 0 512 512">
         <rect  height="512" fill="${color}" />
-        <text x="256" y="256" font-family="Arial" font-size="120" 
-              fill="white" text-anchor="middle" dominant-baseline="middle">${initials}</text>
     </svg>`;
-}
+      }
 
-function escapeHTML(str) {
-    return str.replace(/[&<>'"]/g, tag => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        "'": '&#39;',
-        '"': '&quot;'
-    }[tag]));
-}
-
-// Initialize
-loadCharacters();</script>
-</body>
+      function escapeHTML(str) {
+        return str.replace(
+          /[&<>'"]/g,
+          (tag) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              "'": "&#39;",
+              '"': "&quot;",
+            }[tag])
+        );
+      }
+*/
+      // tialize
+      loadCharacters();
+    </script>
+  </body>
 </html>

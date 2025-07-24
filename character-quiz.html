@@ -374,42 +374,60 @@
 
       // Character generation function
       async function generateCharacterFromData(formData) {
-        // Generate description
         const description = await generateCharacterDescription(formData);
-
-        // Generate image
-        const imageUrl = await generateCharacterImage(
-          description,
-          formData.archetype
-        );
-
+        const imageUrl = await generateCharacterImage(description, formData.archetype);
         return {
           name: formData.name,
           gender: formData.gender,
           level: parseInt(formData.level),
           type: formData.archetype,
-          description: description,
-          struggle: formData.strugge,
-          image: imageUrl,
+          description,
+          image: imageUrl, // URL instead of base64
           stats: {
             hp: 10 + parseInt(formData.level) * 5,
             attack: 3 + parseInt(formData.level),
-            defense: 2 + parseInt(formData.level),
+            defense: 2 + parseInt(formData.level)
           },
+          createdAt: new Date().toISOString()
         };
       }
 
-      // Save to local storage
       function saveCharacterToLocalStorage(character) {
-        const savedChars = JSON.parse(
-          localStorage.getItem("adndiCharacters") || "[]"
-        );
-        const characters = Array.isArray(savedChars) ? savedChars : [];
-        characters.push(character);
-        localStorage.setItem("adndiCharacters", JSON.stringify(characters));
+  const maxCharacters = 10;
+  let characters = [];
+
+  try {
+    characters = JSON.parse(localStorage.getItem("adndiCharacters") || "[]");
+
+    // Enforce max characters
+    if (characters.length >= maxCharacters) {
+      characters = characters.slice(-maxCharacters + 1);
+    }
+
+    characters.push(character);
+
+    const json = JSON.stringify(characters);
+    const size = new Blob([json]).size;
+
+    console.log(`💾 Saving ${size} bytes to localStorage...`);
+
+    // Rough quota warning (5MB = 5 * 1024 * 1024)
+    if (size > 4500000) {
+      throw new Error("Character data too large to store. Please remove some old characters.");
+    }
+
+    localStorage.setItem("adndiCharacters", json);
+  } catch (e) {
+    console.error("❌ Error saving character to localStorage:", e);
+    alert("⚠️ Unable to save character. Local storage may be full or corrupted.");
+  }
+}
+
+      function showError(element, message) {
+        element.innerHTML = `<div class="error-content"><p>${escapeHTML(message)}</p><button onclick="this.parentElement.style.display='none'">Dismiss</button></div>`;
+        element.style.display = "block";
       }
 
-      // Utility function
       function escapeHTML(str) {
         const div = document.createElement("div");
         div.textContent = str;
