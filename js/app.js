@@ -56,6 +56,8 @@ async function makeAPIRequest(path, payload, retries = 3) {
       
       // Validate response structure
       if (path === 'chat' && (!data.choices?.[0]?.message?.content)) {
+        console.log(data);
+        console.log(!data.choices?.[0]?.message?.content);
         throw new Error("Invalid chat response format");
       }
       if (path === 'image' && (!data.data?.[0]?.url && !data.data?.[0]?.b64_json)) {
@@ -88,7 +90,7 @@ async function generateCharacterDescription(formData) {
       Use vivid, descriptive language.`;
 
     const response = await makeAPIRequest("chat", {
-      model: "hackathon/chat",
+      model: "hackathon/qwen3",
       messages: [
         {
           role: "system",
@@ -113,8 +115,9 @@ async function generateCharacterDescription(formData) {
     return description;
   } catch (error) {
     console.error("Description generation failed:", error);
+    console.log("Description generation failes: " + error);
     // Fallback description
-    return `${formData.name} is a ${formData.archetype} from ${formData.background}. ` +
+    return `${formData.name} is a ${formData.gender} ${formData.archetype} from ${formData.background}. ` +
            `They have ${formData.hair || 'mysterious'} hair and are known for their ${formData.trait}. ` +
            `Their companion is ${formData.companion} and they struggle with ${formData.struggle}.`;
   }
@@ -138,7 +141,7 @@ async function generateCharacterImage(description, archetype) {
     const imageData = response.data[0];
     const imageUrl = imageData?.url || 
                    (imageData?.b64_json ? `data:image/png;base64,${imageData.b64_json}` : null);
-
+    console.log(imageUrl, imageData);
     if (!imageUrl) throw new Error("No image data received");
 
     // Verify image loads
@@ -209,7 +212,7 @@ async function generateCharacter(characterData) {
     throw new Error("Character creation failed. Please try again.");
   }
 }
-// Add to app.js
+
 const IMAGE_SERVICE = {
     
     async generateCharacterImage(description, archetype, characterId = null) {
@@ -305,6 +308,9 @@ const IMAGE_SERVICE = {
 };
 // Initialize the app
 function initApp() {
+  // Emptying the cache and localStorage
+  localStorage.clear();
+
   document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('characterForm')) {
       initCharacterForm();
