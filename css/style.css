@@ -1,7 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap%22%20rel=%22stylesheet');
+
 /* Base Styles */
 body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f5f0e6;
+  font-family: "MedievalSharp";
+  font-weight: 400;
+  font-style: normal;
+    background-color: #e8d1a7;
     color: #333;
     margin: 0;
     padding: 0;
@@ -15,15 +20,18 @@ body {
 }
 
 h1, h2, h3 {
-    color: #4a2c82;
+    font-family: "UnifrakturCook";
+    font-size: 72px;
+    color: #743014;
     margin-bottom: 20px;
 }
 
 /* Buttons */
 .btn-primary {
-    background-color: #6a4c93;
+    background-color: #84592b;
     color: white;
     padding: 10px 20px;
+    justify-content: center;
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -32,7 +40,7 @@ h1, h2, h3 {
 }
 
 .btn-primary:hover {
-    background-color: #5a3d7a;
+    background-color: #9d9167;
 }
 
 .btn-secondary {
