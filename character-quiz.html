@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADnDI - Character Quiz</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Character Quiz</h1>
+        <form id="characterForm">
+            <div class="form-group">
+                <label for="characterName">Character Name:</label>
+                <input type="text" id="characterName" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="characterLevel">Level:</label>
+                <input type="number" id="characterLevel" min="1" max="20" value="1" required>
+            </div>
+            
+            <!-- Core Fantasy Archetype -->
+            <div class="form-group">
+                <label>Core Fantasy Archetype:</label>
+                <div class="options-grid">
+                    <label><input type="radio" name="archetype" value="Barbarian" required> Barbarian</label>
+                    <label><input type="radio" name="archetype" value="Bard"> Bard</label>
+                    <label><input type="radio" name="archetype" value="Cleric"> Cleric</label>
+                    <label><input type="radio" name="archetype" value="Druid"> Druid</label>
+                    <label><input type="radio" name="archetype" value="Fighter"> Fighter</label>
+                    <label><input type="radio" name="archetype" value="Monk"> Monk</label>
+                    <label><input type="radio" name="archetype" value="Paladin"> Paladin</label>
+                    <label><input type="radio" name="archetype" value="Ranger"> Ranger</label>
+                    <label><input type="radio" name="archetype" value="Rogue"> Rogue</label>
+                    <label><input type="radio" name="archetype" value="Sorcerer"> Sorcerer</label>
+                    <label><input type="radio" name="archetype" value="Warlock"> Warlock</label>
+                    <label><input type="radio" name="archetype" value="Wizard"> Wizard</label>
+                </div>
+            </div>
+            
+            <!-- Background/Origin -->
+            <div class="form-group">
+                <label for="background">Background/Origin:</label>
+                <select id="background" required>
+                    <option value="">Select...</option>
+                    <option value="city">In a bustling city full of intrigue</option>
+                    <option value="village">A remote village surrounded by forest</option>
+                    <option value="ruins">Deep underground in ancient ruins</option>
+                    <option value="clouds">A floating city in the clouds</option>
+                    <option value="desert">A nomadic tribe crossing deserts</option>
+                    <option value="royalty">Among royalty in a majestic castle</option>
+                </select>
+            </div>
+            
+            <!-- Hair -->
+            <div class="form-group">
+                <label for="hair">Hair:</label>
+                <input type="text" id="hair" placeholder="Describe your character's hair">
+            </div>
+            
+            <!-- Attitude toward conflict -->
+            <div class="form-group">
+                <label>Attitude toward conflict:</label>
+                <div class="options-grid">
+                    <label><input type="radio" name="conflict" value="peace" required> Always looking for peace</label>
+                    <label><input type="radio" name="conflict" value="calm"> Calm until provoked</label>
+                    <label><input type="radio" name="conflict" value="fight"> Loves a good fight</label>
+                    <label><input type="radio" name="conflict" value="think"> Thinks first, then acts</label>
+                    <label><input type="radio" name="conflict" value="manipulate"> Manipulates others to avoid conflict</label>
+                    <label><input type="radio" name="conflict" value="chaos"> Welcomes chaos but never participates</label>
+                </div>
+            </div>
+            
+            <!-- Most defining trait -->
+            <div class="form-group">
+                <label>Most defining trait:</label>
+                <div class="options-grid">
+                    <label><input type="radio" name="trait" value="loyalty" required> Loyalty</label>
+                    <label><input type="radio" name="trait" value="curiosity"> Curiosity</label>
+                    <label><input type="radio" name="trait" value="ambition"> Ambition</label>
+                    <label><input type="radio" name="trait" value="humor"> Humor</label>
+                    <label><input type="radio" name="trait" value="mystery"> Mystery</label>
+                    <label><input type="radio" name="trait" value="honor"> Honor</label>
+                </div>
+            </div>
+            
+            <!-- Companion -->
+            <div class="form-group">
+                <label>Companion:</label>
+                <div class="options-grid">
+                    <label><input type="radio" name="companion" value="owl" required> A wise owl</label>
+                    <label><input type="radio" name="companion" value="wolf"> A fiery wolf</label>
+                    <label><input type="radio" name="companion" value="fox"> A sly fox</label>
+                    <label><input type="radio" name="companion" value="dragon"> A miniature dragon</label>
+                    <label><input type="radio" name="companion" value="cat"> A shadowy cat</label>
+                </div>
+            </div>
+            
+            <!-- Inner Struggle -->
+            <div class="form-group">
+                <label>Inner Struggle:</label>
+                <div class="options-grid">
+                    <label><input type="radio" name="struggle" value="curse" required> A cursed part</label>
+                    <label><input type="radio" name="struggle" value="love"> Forbidden love</label>
+                    <label><input type="radio" name="struggle" value="greed"> Greed for power</label>
+                    <label><input type="radio" name="struggle" value="demon"> A literal demon within</label>
+                    <label><input type="radio" name="struggle" value="doubt"> Self-doubt</label>
+                    <label><input type="radio" name="struggle" value="peace"> Nothing, they protect their peace</label>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-primary">Generate your character</button>
+        </form>
+        <div id="errorDisplay" class="error-message" style="display: none;"></div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        
+    document.getElementById('characterForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Safely get elements with null checks
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const errorDisplay = document.getElementById('errorDisplay') || createErrorDisplay();
+    
+    try {
+        // Show loading state
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Generating...";
+        }
+        
+        if (errorDisplay) {
+            errorDisplay.style.display = 'none';
+            errorDisplay.textContent = '';
+        }
+        
+        // Collect and validate form data
+        const formData = getFormData();
+        validateFormData(formData);
+        
+        // Generate character
+        const character = await generateCharacterFromData(formData);
+        
+        // Save and redirect
+        saveCharacterToLocalStorage(character);
+        window.location.href = 'character-creation.html';
+        
+    } catch (error) {
+        console.error("Character generation failed:", error);
+        showError(errorDisplay, error.message);
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Generate your character";
+        }
+    }
+});
+
+// Helper function to create error display if it doesn't exist
+function createErrorDisplay() {
+    const errorDiv = document.createElement('div');
+    errorDiv.id = 'errorDisplay';
+    errorDiv.className = 'error-message';
+    document.querySelector('.container').appendChild(errorDiv);
+    return errorDiv;
+}
+
+// Improved error display function
+function showError(element, message) {
+    if (!element) return;
+    
+    element.innerHTML = `
+        <div class="error-content">
+            <p>${escapeHTML(message)}</p>
+            <button onclick="this.parentElement.style.display='none'">Dismiss</button>
+        </div>
+    `;
+    element.style.display = 'block';
+}
+
+// Form data collection with validation
+function getFormData() {
+    const form = document.getElementById('characterForm');
+    return {
+        name: form.querySelector('#characterName').value.trim(),
+        level: form.querySelector('#characterLevel').value,
+        archetype: form.querySelector('input[name="archetype"]:checked')?.value,
+        background: form.querySelector('#background').value,
+        hair: form.querySelector('#hair').value.trim(),
+        conflict: form.querySelector('input[name="conflict"]:checked')?.value,
+        trait: form.querySelector('input[name="trait"]:checked')?.value,
+        companion: form.querySelector('input[name="companion"]:checked')?.value,
+        struggle: form.querySelector('input[name="struggle"]:checked')?.value
+    };
+}
+
+function validateFormData(formData) {
+    const errors = [];
+    
+    if (!formData.name) errors.push("Character name is required");
+    if (!formData.archetype) errors.push("Please select a character archetype");
+    if (!formData.background) errors.push("Please select a background");
+    if (isNaN(formData.level) || formData.level < 1 || formData.level > 20) {
+        errors.push("Level must be between 1 and 20");
+    }
+    
+    if (errors.length > 0) {
+        throw new Error(errors.join("\n"));
+    }
+}
+
+// Character generation function
+async function generateCharacterFromData(formData) {
+    // Generate description
+    const description = await generateCharacterDescription(formData);
+    
+    // Generate image
+    const imageUrl = await generateCharacterImage(description, formData.archetype);
+    
+    return {
+        name: formData.name,
+        level: parseInt(formData.level),
+        type: formData.archetype,
+        description: description,
+        image: imageUrl,
+        stats: {
+            hp: 10 + parseInt(formData.level) * 5,
+            attack: 3 + parseInt(formData.level),
+            defense: 2 + parseInt(formData.level)
+        }
+    };
+}
+
+// Save to local storage
+function saveCharacterToLocalStorage(character) {
+    const savedChars = JSON.parse(localStorage.getItem('adndiCharacters') || "[]");
+    const characters = Array.isArray(savedChars) ? savedChars : [];
+    characters.push(character);
+    localStorage.setItem('adndiCharacters', JSON.stringify(characters));
+}
+
+// Utility function
+function escapeHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+    </script>
+</body>
+</html>
