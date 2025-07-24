@@ -8,12 +8,9 @@
 </head>
 
 <body>
-    <div class="container">
-        <h1 class="curved-header">Welcome</h1>
-        <h1 class="curved-header-small"> to </h1>
-        <h1 class="curved-header"><strong>Artificial</strong> Dungeons</h1>
-        <h1 class="curved-header-small">and </h1>
-        <h1 class="curved-header">Dragons' Intelligence</h1>
+    <div class="container" style="text-align: center;">
+        <h1 id="welcome-header">Welcome to</h1>
+        <h1 class="header-main"><strong>Artificial</strong> Dungeons<br>and<br>Dragons' Intelligence</h1>
         <button id="startExperience" class="btn-primary">Start your ADnDI experience</button>
     </div>
 
@@ -25,11 +22,16 @@
         });
 
 
-        document.querySelectorAll('.curved-header').forEach(el => {
-            new CircleType(el).radius(1600);});
-        document.querySelectorAll('.curved-header-small').forEach(el => {
-            new CircleType(el).radius(1600);});
+        new CircleType(document.getElementById('welcome-header'))
+    .radius(1100);
 
     </script>
+
+    <style>
+        body{
+            
+
+        }
+    </style>
 </body>
 </html>
