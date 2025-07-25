@@ -968,24 +968,8 @@
 
         if (attempts < maxAttempts) {
           gameState.activePlayerIndex = nextPlayerIndex;
-        } 
-        if(checkForGameOver()) {
-            console.log("GAME OVER; EVERYBODY DEAD!")
-            gameState.gameOver = true;
-            endGame();
         }
       }
-    }
-
-    function checkForGameOver() {
-        for (let character of gameState.characters) {
-            console.log(character.hp);
-            if (character.hp > 0) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     // Event listeners
@@ -1011,6 +995,7 @@
       } catch (e) {
         console.error("Failed to generate final image:", e);
       }
+      window.location.href = "final-story.html";
     }
 
     document.getElementById("endGame").addEventListener("click", endGame);
