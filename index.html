@@ -8,6 +8,8 @@
 </head>
 
 <body>
+    <tool name="start_experience" description="Begin the ADnDI adventure|Start the game"></tool>
+
     <div class="container" style="text-align: center;">
         <h1 id="welcome-header">Welcome to</h1>
         <h1 class="header-main"><strong>Artificial</strong> Dungeons<br>and<br>Dragons' Intelligence</h1>
@@ -24,6 +26,14 @@
         new CircleType(document.getElementById('welcome-header'))
     .radius(1100);
 
+        document
+            .querySelector('tool[name="start_experience"]')
+            .addEventListener("call", (e)=>{
+                document.getElementById("startExperience").click();
+                e.target.dispatchEvent(new CustomEvent("return", {
+                    detail: {status:"Game started!"}
+                }));
+            });
     </script>
 
 
