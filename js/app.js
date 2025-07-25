@@ -331,3 +331,51 @@ function log(msg, ...parameters) {
   }
   console.log("Finished logging...");
 }
+
+function generateHTML(finalData, document, story) {
+  // Create HTML content for download
+  const divElements = finalData.characters.map(
+    (char) => `
+            <div class="character">
+                <img src="${char.image}" alt="${char.name}">
+                <h3>${char.name}</h3>
+                <p>Level ${char.level} ${char.type}</p>
+                <p>HP: ${char.stats.hp}</p>
+            </div>
+        `
+  );
+
+  const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+    <title>${finalData.theme} - ADnDI Adventure</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { color: #4a2c82; }
+        .characters { display: flex; flex-wrap: wrap; gap: 20px; margin: 20px 0; }
+        .character { border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
+        .character img { max-width: 100px; }
+        .story { line-height: 1.6; margin: 20px 0; }
+        .illustration { text-align: center; margin: 20px 0; }
+        .illustration img { max-width: 100%; }
+    </style>
+</head>
+<body>
+    <h1>${finalData.theme}</h1>
+    
+    <div class="illustration">
+        ${document.getElementById("storyIllustration").innerHTML}
+    </div>
+    
+    <div class="characters">
+        ${divElements}
+    </div>
+    
+    <div class="story">
+        <p>${story}</p>
+    </div>
+</body>
+</html>`;
+
+  return htmlContent;
+}
