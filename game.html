@@ -11,14 +11,17 @@
         gap: 20px;
         flex-wrap: wrap;
       }
+
       .story-panel {
         flex: 3;
         min-width: 300px;
       }
+
       .actions-panel {
         flex: 1;
         min-width: 250px;
       }
+
       .story-text {
         background-color: rgba(233, 207, 153, 0.7);
         border: 2px solid #69583e;
@@ -31,26 +34,31 @@
         font-size: 18px;
         line-height: 1.6;
       }
+
       .story-text p {
         margin-bottom: 15px;
         animation: fadeIn 0.5s ease-in;
       }
+
       @keyframes fadeIn {
         from {
           opacity: 0;
           transform: translateY(10px);
         }
+
         to {
           opacity: 1;
           transform: translateY(0);
         }
       }
+
       .loading {
         font-style: italic;
         color: #5c331f;
         text-align: center;
         padding: 20px;
       }
+
       .decision-point {
         background-color: rgba(116, 65, 31, 0.2);
         border-left: 4px solid #743014;
@@ -58,6 +66,7 @@
         margin: 15px 0;
         border-radius: 0 8px 8px 0;
       }
+
       .dice-section {
         background-color: rgba(233, 207, 153, 0.7);
         border: 2px solid #69583e;
@@ -66,29 +75,35 @@
         text-align: center;
         margin-top: 20px;
       }
+
       .dice-result {
         font-size: 24px;
         font-weight: bold;
         margin: 15px 0;
         min-height: 40px;
       }
+
       .dice-animation {
         animation: rollDice 1s ease-out;
       }
+
       @keyframes rollDice {
         0% {
           transform: rotate(0deg) scale(1);
           opacity: 0;
         }
+
         50% {
           transform: rotate(180deg) scale(1.5);
           opacity: 1;
         }
+
         100% {
           transform: rotate(360deg) scale(1);
           opacity: 1;
         }
       }
+
       .voix-tool {
         background-color: rgba(116, 65, 31, 0.2);
         border: 2px solid #69583e;
@@ -97,12 +112,14 @@
         margin-top: 20px;
         display: none;
       }
+
       .highlighted {
         box-shadow: 0 0 15px gold;
         transform: scale(1.05);
         transition: all 0.3s ease;
         z-index: 10;
       }
+
       .status-effect {
         display: inline-block;
         padding: 3px 8px;
@@ -110,18 +127,22 @@
         font-size: 12px;
         margin: 2px;
       }
+
       .status-poison {
         background-color: #8a2be2;
         color: white;
       }
+
       .status-boost {
         background-color: #32cd32;
         color: black;
       }
+
       .status-weak {
         background-color: #a9a9a9;
         color: white;
       }
+
       /* VOIX tool styles */
       .voix-tool {
         background-color: rgba(116, 65, 31, 0.2);
@@ -138,11 +159,15 @@
       }
 
       .tool-element {
-        display: none; /* Hidden but accessible to VOIX */
+        display: none;
+        /* Hidden but accessible to VOIX */
       }
     </style>
   </head>
+
   <body>
+    <tool name="roll_dice_button" description="Rolls a Dice"></tool>
+
     <div class="container">
       <h1 id="gameThemeTitle">AI Generated Game</h1>
 
@@ -175,16 +200,13 @@
       </div>
 
       <!-- VOIX-accessible tool elements -->
-      <div class="tool-element">
+      <!--<div class="tool-element">
         <tool id="diceRoller" type="button">Roll Dice</tool>
         <tool id="endGameButton" type="button">End Game</tool>
         <tool id="playerAction" type="input">Describe your action</tool>
-      </div>
+      </div>-->
 
       <div class="characters-container">
-        <h2 style="text-align: center; color: #f8c630; margin-bottom: 20px">
-          Your Party
-        </h2>
         <div id="characterDisplays" class="characters-grid"></div>
       </div>
 
@@ -204,7 +226,7 @@
       <div style="text-align: center; margin-top: 20px">
         <button id="restartGame" class="btn-primary">Play Again</button>
       </div>
-      <tool
+      <!--<tool
         name="rollDice"
         class="tool-element"
         description="Rolls a Dungeons & Dragons die of a given type (d4, d6, d8, d10, d12, d20)"
@@ -214,17 +236,28 @@
           type="text"
           placeholder="Type of die (e.g., d20)"
         />
-      </tool>
+      </tool>-->
     </section>
 
     <script src="js/app.js"></script>
     <script>
+      document
+        .querySelector('tool[name="roll_dice_button"]')
+        .addEventListener("call", (e) => {
+          document.getElementById("rollDice").click();
+          e.target.dispatchEvent(
+            new CustomEvent("return", {
+              detail: { status: "You rolled the Dice!" },
+            })
+          );
+        });
+
       // Make API request function
       async function makeAPIRequest(path, payload, retries = 3) {
         const API_CONFIG = {
           BASE_URL: "https://api.litviva.com/v1",
           API_KEY: "sk-RDjpy3tDOusiadmVRKXtbg",
-          TIMEOUT: 15000,
+          TIMEOUT: 30000,
         };
 
         for (let i = 0; i < retries; i++) {
@@ -363,25 +396,25 @@
           processVoixCommand(command);
         });
       }
-      function rollDice(dieType) {
-        const diceMatch = dieType.toLowerCase().match(/^d(\d+)$/);
-        if (!diceMatch) {
-          alert("Invalid die type! Use format like d4, d6, d20...");
-          return;
-        }
+      /* function rollDice(dieType) {
+       const diceMatch = dieType.toLowerCase().match(/^d(\d+)$/);
+       if (!diceMatch) {
+         alert("Invalid die type! Use format like d4, d6, d20...");
+         return;
+       }
 
-        const sides = parseInt(diceMatch[1]);
-        const result = Math.floor(Math.random() * sides) + 1;
+       const sides = parseInt(diceMatch[1]);
+       const result = Math.floor(Math.random() * sides) + 1;
 
-        const storyElement = document.getElementById("gameScript");
+       const storyElement = document.getElementById("gameScript");
 
-        const resultText = document.createElement("p");
-        resultText.className = "dice-result";
-        resultText.textContent = `🎲 You rolled a ${dieType.toUpperCase()}: ${result}`;
-        storyElement.appendChild(resultText);
-        storyElement.scrollTop = storyElement.scrollHeight;
-      }
-
+       const resultText = document.createElement("p");
+       resultText.className = "dice-result";
+       resultText.textContent = `🎲 You rolled a ${dieType.toUpperCase()}: ${result}`;
+       storyElement.appendChild(resultText);
+       storyElement.scrollTop = storyElement.scrollHeight;
+     }
+*/
       // Render character cards
       async function renderCharacters() {
         // Container for all of the player cards
@@ -532,7 +565,7 @@
                         The party consists of: ${gameState.characters
                           .map(
                             (c) =>
-                              `${c.name} (Level ${c.level} ${c.type} - HP: ${c.stats.hp}/${c.stats.maxHp})`
+                              `${c.name} (Level ${c.level} ${c.type} - HP: ${c.stats.hp})`
                           )
                           .join(", ")}.
                         The player ${lastAction}.
@@ -646,7 +679,7 @@
                         the player ${
                           gameState.characters[gameState.activePlayerIndex].name
                         } decides to: "${command}".
-                        Describe the outcome of this decision in 2-3 sentences.`;
+                        Describe the outcome of this decision in 1-2 sentences.`;
 
             const response = await makeAPIRequest("chat", {
               model: "hackathon/qwen3",
@@ -721,7 +754,7 @@
         }
 
         // Check for common actions
-        if (command.toLowerCase().includes("attack")) {
+        if (command.toLowerCase().includes("damage")) {
           // Simulate attack damage
           const damage = Math.floor(Math.random() * 8) + 2;
           stats.attack += 1;
@@ -729,13 +762,14 @@
             "system",
             `${character.name} gains +1 attack from battle experience!`
           );
+          stats.hp = stats.hp - damage;
         } else if (
           command.toLowerCase().includes("heal") ||
           command.toLowerCase().includes("potion")
         ) {
           // Apply healing
           const healAmount = Math.floor(Math.random() * 10) + 5;
-          stats.hp = Math.min(stats.maxHp, stats.hp + healAmount);
+          stats.hp = stats.hp + healAmount;
           appendToStory(
             "system",
             `${character.name} restores ${healAmount} HP!`
@@ -774,6 +808,9 @@
             );
           }
         }
+
+        gameState.characters.stats = stats;
+        
       }
 
       // Append to story panel
