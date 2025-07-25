@@ -70,7 +70,7 @@
         await generateFinalIllustration();
 
         // Display story
-        document.getElementById("finalStoryText").innerHTML = formatStoryText(
+        document.getElementById("finalStoryText").innerHTML = await formatStoryText(
           finalData.story
         );
       }
@@ -202,7 +202,7 @@
         }
       }
 
-      function formatStoryText(text) {
+      async function formatStoryText(text) {
         // Simple formatting
         let textRes = "";
 
@@ -213,13 +213,46 @@
             .replace("**", "")
             .replace("*", "");
         }
-
-        return textRes;
+        let testRes = await generateStorySummary(textRes)
+        return testRes
       }
 
-      document.getElementById("downloadStory").addEventListener("click", () => {
+      async function generateStorySummary(text) {
+        const prompt = `Make an interesting, thrilling and a vivid summary of the following story in less than 300 words:
+      ${text} /no_think. Don't forget to make the story interesting and epic and not over the limit of 300 words`;
 
-        const htmlContent = generateHTML(finalData, document, formatStoryText(finalData.story));
+        const response = await makeAPIRequest("chat", {
+          model: "hackathon/qwen3",
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are a creative fantasy writer who specializes in vivid story telling. /no_think",
+            },
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+          temperature: 0.7,
+        });
+
+        const story = response.choices[0].message.content.trim();
+
+        // Basic validation
+        if (!story || story.length < 50) {
+          throw new Error("story generation failed - response too short");
+        }
+
+        return story;
+      }
+
+      document.getElementById("downloadStory").addEventListener("click", async () => {
+        const htmlContent = generateHTML(
+          finalData,
+          document,
+          await formatStoryText(finalData.story)
+        );
 
         console.log(htmlContent);
 
