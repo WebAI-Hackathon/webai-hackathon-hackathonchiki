@@ -480,17 +480,7 @@
             '<div class="error">Failed to generate story segment. Please try again.</div>';
         }
       }
-
-      // Display story segment with typing effect
-      function displayStorySegment(text) {
-        const storyElement = document.getElementById("gameScript");
-        storyElement.innerHTML = "";
-
-        // Split text into paragraphs
-        const paragraphs = text.split("\n\n").filter((p) => p.trim() !== "");
-
-        let index = 0;
-        
+      
         // Initialize VOIX tool elements
         function initVoixTools() {
             // Dice roller tool
@@ -513,6 +503,7 @@
                 processVoixCommand(command);
             });
         }
+
         function rollDice(dieType) {
     const diceMatch = dieType.toLowerCase().match(/^d(\d+)$/);
     if (!diceMatch) {
@@ -653,13 +644,27 @@
         // Display story segment with typing effect
         function displayStorySegment(text) {
             const storyElement = document.getElementById('gameScript');
-            
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading';
+            loadingDiv.textContent = 'Weaving the tale of your adventure...';
+            storyElement.appendChild(loadingDiv);
+            gameState.decisionMade = false;
             
             // Split text into paragraphs
             const paragraphs = text.split('\n\n').filter(p => p.trim() !== '');
             
             let index = 0;
             
+            function addNextParagraph() {
+                if (index < paragraphs.length) {
+                    const p = document.createElement('p');
+                    p.textContent = paragraphs[index];
+                    storyElement.appendChild(p);
+                    storyElement.scrollTop = storyElement.scrollHeight;
+                    index++;
+                    setTimeout(addNextParagraph, 1000);
+                }
+            }
             const hr = document.createElement('hr');
             hr.style.borderTop = '1px dashed #5c331f';
             hr.style.margin = '15px 0';
@@ -825,11 +830,7 @@
             storyElement.appendChild(p);
             storyElement.scrollTop = storyElement.scrollHeight;
             index++;
-            setTimeout(addNextParagraph, 1000);
         }
-
-        addNextParagraph();
-      }
 
       // Show decision point with options
       function showDecisionPoint() {
@@ -1227,6 +1228,7 @@
           showRecap(finalStory, "");
         }
       });
+
       function showRecap(story, imageUrl) {
         document.getElementById("gameSection").style.display = "none";
         document.getElementById("recapSection").style.display = "block";
@@ -1241,6 +1243,7 @@
           img.style.display = "none";
         }
       }
+      
       document.getElementById("restartGame").addEventListener("click", () => {
         localStorage.removeItem("adndiFinalStory");
         document.getElementById("recapSection").style.display = "none";
