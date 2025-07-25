@@ -292,6 +292,7 @@ textarea {
     flex-wrap: wrap;
     gap: 20px;
     justify-content: center;
+    margin-top: 100px;
 }
 
 .character-display {
