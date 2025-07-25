@@ -7,6 +7,44 @@
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
+    <tool name="fill_out_quiz" description="Fill out the answers to the quiz">
+      <prop name="name" type="string" description="Name of the character" required></prop>
+      <prop name="gender" type="string" description="Female, male, or other" required></prop>
+      <prop name="level" type="number" description="Level from 1 to 20 inclusive" required></prop>
+      <prop name="archetype" type="string" description="Choose one from the existing list (Barbarian, Wizard, Rogue etc)" required></prop>
+      <prop name="background" type="string" description="Choose a version of character-backgrund" required></prop>
+      <prop name="hair" type="string" description="Describe your character's hair" required></prop>
+      <prop name="attitude" type="string" description="Choose one how the character reacts to conflicts" required></prop>
+      <prop name="trait" type="string" description="Choose one: what is the defining trait of the character" required></prop>
+      <prop name="companion" type="string" description="Choose oone: companion" required></prop>
+      <prop name="struggle" type="string" description="Choose one: what is the character's inner struggle" required></prop>
+    </tool>
+
+    <tool name="generate" description="Generate the character"></tool>
+
+
+
+
+    <!--
+    <context name="quiz_status" id="quiz-context">
+      Form status: Empty
+      Required fields: name, gender, level, archetype, background, hair, attitude, trait, companion, struggle
+      Filled fields: none
+      Validation errors: none 
+    </context>
+
+  -->
+
+
+
+
+
+
+
+
+
+
+
     <div class="container">
       <h1>Character Quiz</h1>
       <form id="characterForm">
@@ -242,7 +280,7 @@
           </div>
         </div>
 
-        <button type="submit" class="btn-primary">
+        <button type="submit" class="btn-primary" id="generateButton">
           Generate your character
         </button>
       </form>
@@ -251,6 +289,20 @@
 
     <script src="js/app.js"></script>
     <script>
+
+      document
+            .querySelector('tool[name="generate"]')
+            .addEventListener("call", (e)=>{
+                document.getElementById('generateButton').click();
+                e.target.dispatchEvent(new CustomEvent("return", {
+                    detail: {status:"Generation of the character started!"}
+                }));
+            });
+
+
+
+
+
       document
         .getElementById("characterForm")
         .addEventListener("submit", async (e) => {
