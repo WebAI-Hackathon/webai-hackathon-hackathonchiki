@@ -255,7 +255,8 @@
       const API_CONFIG = {
         BASE_URL: "https://api.litviva.com/v1",
         API_KEY: "sk-RDjpy3tDOusiadmVRKXtbg",
-        TIMEOUT: 15000,
+        TIMEOUT: path === "chat" ? 30000 : 15000,
+
       };
 
       for (let i = 0; i < retries; i++) {
@@ -359,7 +360,7 @@
         renderCharacters();
 
         // Initialize VOIX tool integration
-        initVoixTools();
+        //initVoixTools();
 
         // Generate initial story
         await generateNextScene();
@@ -371,7 +372,7 @@
     }
 
     // Initialize VOIX tool elements
-    function initVoixTools() {
+   /* function initVoixTools() {
       // Dice roller tool
       const diceRoller = document.getElementById("diceRoller");
       diceRoller.addEventListener("click", () => {
@@ -393,7 +394,7 @@
         ).textContent = `VOIX: "${command}"`;
         processVoixCommand(command);
       });
-    }
+    }*/
     /* function rollDice(dieType) {
        const diceMatch = dieType.toLowerCase().match(/^d(\d+)$/);
        if (!diceMatch) {
@@ -542,7 +543,7 @@
               .join(", ")}.
                         Describe the setting, atmosphere, and initial challenge they face. 
                         End with a dramatic lead-in to the first challenge. 
-                        Make it vivid and immersive (3-4 sentences).`;
+                        Make it vivid and immersive (1-2 sentences).`;
         } else {
           // Continuation scene
           const lastAction =
@@ -563,7 +564,7 @@
                         The player ${lastAction}.
                         Describe what happens next and set up the next challenge. 
                         Include elements like combat, exploration, or puzzle solving. 
-                        Make it 3-4 sentences long.`;
+                        Make it 1-2 sentences long.`;
         }
 
         // Call the API to generate the story segment
