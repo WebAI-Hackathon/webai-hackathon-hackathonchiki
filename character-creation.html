@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
+    <tool name="create_character" description="Create a character|Start creating a character"></tool>
+
     <div class="container">
       <h1>Let's create your characters!</h1>
       <div id="characterCards" class="cards-container"></div>
@@ -24,6 +26,17 @@
       let characters = [];
       let characterImageUrls = [];
       const maxCharacters = 4;
+      loadCharacters();
+
+      document
+            .querySelector('tool[name="create_character"]')
+            .addEventListener("call", (e)=>{
+                document.getElementById("createCharacter").click();
+                e.target.dispatchEvent(new CustomEvent("return", {
+                    detail: {status:"Now you can create Character!"}
+                }));
+            });
+      
 
       document
         .getElementById("createCharacter")
