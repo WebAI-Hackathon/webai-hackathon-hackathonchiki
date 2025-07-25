@@ -362,7 +362,10 @@
         // Generate the next story scene
         async function generateNextScene() {
             const storyElement = document.getElementById('gameScript');
-            storyElement.innerHTML = '<div class="loading">Weaving the tale of your adventure...</div>';
+            const loadingDiv = document.createElement('div');
+loadingDiv.className = 'loading';
+loadingDiv.textContent = 'Weaving the tale of your adventure...';
+storyElement.appendChild(loadingDiv);
             gameState.decisionMade = false;
             
             try {
@@ -421,7 +424,7 @@
         // Display story segment with typing effect
         function displayStorySegment(text) {
             const storyElement = document.getElementById('gameScript');
-            storyElement.innerHTML = '';
+            
             
             // Split text into paragraphs
             const paragraphs = text.split('\n\n').filter(p => p.trim() !== '');
@@ -438,6 +441,10 @@
                     setTimeout(addNextParagraph, 1000);
                 }
             }
+            const hr = document.createElement('hr');
+hr.style.borderTop = '1px dashed #5c331f';
+hr.style.margin = '15px 0';
+storyElement.appendChild(hr);
             
             addNextParagraph();
         }
