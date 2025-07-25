@@ -12,9 +12,9 @@
       <prop name="gender" type="string" description="Female, male, or other" required></prop>
       <prop name="level" type="number" description="Level from 1 to 20 inclusive" required></prop>
       <prop name="archetype" type="string" description="Choose one from the existing list (Barbarian, Wizard, Rogue etc)" required></prop>
-      <prop name="background" type="string" description="Choose a version of character-backgrund" required></prop>
+      <prop name="background" type="string" description="Choose a version of character-background" required></prop>
       <prop name="hair" type="string" description="Describe your character's hair" required></prop>
-      <prop name="attitude" type="string" description="Choose one how the character reacts to conflicts" required></prop>
+     <prop name="attitude" type="string" description="Choose one how the character reacts to conflicts" required></prop>
       <prop name="trait" type="string" description="Choose one: what is the defining trait of the character" required></prop>
       <prop name="companion" type="string" description="Choose oone: companion" required></prop>
       <prop name="struggle" type="string" description="Choose one: what is the character's inner struggle" required></prop>
@@ -299,8 +299,43 @@
                 }));
             });
 
+    
+      
 
+document.querySelectorAll('tool[name]').forEach(tool => {
+  const name = tool.getAttribute('name');
+  tool.addEventListener('call', (e) => {
+    const data = e.detail || {};
+    const form = document.getElementById('characterForm');
 
+    if (name === "fill_character_info") {
+      if (data.characterName) form.querySelector("#characterName").value = data.characterName;
+      if (data.gender) {
+        const genderRadio = form.querySelector(input[name="gender"][value="${data.gender}"]);
+        if (genderRadio) genderRadio.checked = true;
+      }
+      if (data.level) form.querySelector("#characterLevel").value = data.level;
+    }
+
+    if (name === "choose_character_traits") {
+      const setRadio = (name, value) => {
+        const el = form.querySelector(input[name="${name}"][value="${value}"]);
+        if (el) el.checked = true;
+      };
+      if (data.archetype) setRadio("archetype", data.archetype);
+      if (data.background) form.querySelector("#background").value = data.background;
+      if (data.hair) form.querySelector("#hair").value = data.hair;
+      if (data.conflict) setRadio("conflict", data.conflict);
+      if (data.trait) setRadio("trait", data.trait);
+      if (data.companion) setRadio("companion", data.companion);
+      if (data.struggle) setRadio("struggle", data.struggle);
+    }
+
+    if (name === "submit_character_form") {
+      form.requestSubmit();
+    }
+  });
+});
 
 
       document
