@@ -35,6 +35,10 @@ html, body{
     text-align: center;
 }
 
+.container h3 {
+    font-size: small;
+}
+
 h1, h2, h3 {
     font-family: "UnifrakturCook";
     font-size: 72px;
