@@ -220,39 +220,21 @@
         <button id="endGame" class="btn-secondary">End Adventure</button>
       </div>
     </div>
-<<<<<<< HEAD
-    <section id="recapSection" style="display: none; padding: 20px">
-      <h2>Your Epic Tale</h2>
-      <div id="finalStory" class="story-text"></div>
-      <img
-        id="finalImage"
-        src=""
-        style="max-width: 100%; margin-top: 20px"
-        alt="Final illustration"
-      />
-      <div style="text-align: center; margin-top: 20px">
-        <button id="restartGame" class="btn-primary">Play Again</button>
-      </div>
+    
+    <section id="recapSection" style="display:none; padding: 20px;">
+        <h2>Your Epic Tale</h2>
+        <div id="finalStory" class="story-text"></div>
+        <img id="finalImage" src="" style="max-width:100%; margin-top: 20px;" alt="Final illustration">
+        <div style="text-align:center; margin-top:20px;">
+            <button id="restartGame" class="btn-primary">Play Again</button>
+        </div>
+        <tool name="rollDice" class="tool-element" 
+            description="Rolls a Dungeons & Dragons die of a given type (d4, d6, d8, d10, d12, d20)">
+            <input name="dieType" type="text" placeholder="Type of die (e.g., d20)" />
+        </tool>
     </section>
 
     <script src="js/app.js"></script>
-=======
-<section id="recapSection" style="display:none; padding: 20px;">
-  <h2>Your Epic Tale</h2>
-  <div id="finalStory" class="story-text"></div>
-  <img id="finalImage" src="" style="max-width:100%; margin-top: 20px;" alt="Final illustration">
-  <div style="text-align:center; margin-top:20px;">
-    <button id="restartGame" class="btn-primary">Play Again</button>
-  </div>
-  <tool name="rollDice" class="tool-element" 
-      description="Rolls a Dungeons & Dragons die of a given type (d4, d6, d8, d10, d12, d20)">
-  <input name="dieType" type="text" placeholder="Type of die (e.g., d20)" />
-</tool>
-
-</section>
-
-
->>>>>>> 7bc03831f6ee3cd6e310fdb86ac4e035bc02373f
     <script>
       // Game state management
       let gameState = {
@@ -637,9 +619,9 @@
         async function generateNextScene() {
             const storyElement = document.getElementById('gameScript');
             const loadingDiv = document.createElement('div');
-loadingDiv.className = 'loading';
-loadingDiv.textContent = 'Weaving the tale of your adventure...';
-storyElement.appendChild(loadingDiv);
+            loadingDiv.className = 'loading';
+            loadingDiv.textContent = 'Weaving the tale of your adventure...';
+            storyElement.appendChild(loadingDiv);
             gameState.decisionMade = false;
             
             try {
@@ -705,20 +687,10 @@ storyElement.appendChild(loadingDiv);
             
             let index = 0;
             
-            function addNextParagraph() {
-                if (index < paragraphs.length) {
-                    const p = document.createElement('p');
-                    p.textContent = paragraphs[index];
-                    storyElement.appendChild(p);
-                    storyElement.scrollTop = storyElement.scrollHeight;
-                    index++;
-                    setTimeout(addNextParagraph, 1000);
-                }
-            }
             const hr = document.createElement('hr');
-hr.style.borderTop = '1px dashed #5c331f';
-hr.style.margin = '15px 0';
-storyElement.appendChild(hr);
+            hr.style.borderTop = '1px dashed #5c331f';
+            hr.style.margin = '15px 0';
+            storyElement.appendChild(hr);
             
             addNextParagraph();
         }
