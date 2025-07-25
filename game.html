@@ -217,13 +217,6 @@
       </div>
     </div>
 
-    <!-- VOIX-accessible tool elements -->
-    <!--<div class="tool-element">
-        <tool id="diceRoller" type="button">Roll Dice</tool>
-        <tool id="endGameButton" type="button">End Game</tool>
-        <tool id="playerAction" type="input">Describe your action</tool>
-      </div>-->
-
     <div class="characters-container">
       
       <div id="characterDisplays" class="characters-grid"></div>
@@ -388,49 +381,6 @@
       }
     }
 
-    // Initialize VOIX tool elements
-   /* function initVoixTools() {
-      // Dice roller tool
-      const diceRoller = document.getElementById("diceRoller");
-      diceRoller.addEventListener("click", () => {
-        document.getElementById("rollDice").click();
-      });
-
-      // End game tool
-      const endGameButton = document.getElementById("endGameButton");
-      endGameButton.addEventListener("click", () => {
-        document.getElementById("endGame").click();
-      });
-
-      // Player action tool
-      const playerAction = document.getElementById("playerAction");
-      playerAction.addEventListener("change", (e) => {
-        const command = e.target.value;
-        document.getElementById(
-          "voixStatus"
-        ).textContent = `VOIX: "${command}"`;
-        processVoixCommand(command);
-      });
-    }*/
-    /* function rollDice(dieType) {
-       const diceMatch = dieType.toLowerCase().match(/^d(\d+)$/);
-       if (!diceMatch) {
-         alert("Invalid die type! Use format like d4, d6, d20...");
-         return;
-       }
-
-       const sides = parseInt(diceMatch[1]);
-       const result = Math.floor(Math.random() * sides) + 1;
-
-       const storyElement = document.getElementById("gameScript");
-
-       const resultText = document.createElement("p");
-       resultText.className = "dice-result";
-       resultText.textContent = `🎲 You rolled a ${dieType.toUpperCase()}: ${result}`;
-       storyElement.appendChild(resultText);
-       storyElement.scrollTop = storyElement.scrollHeight;
-     }
-*/
     function getRandomDieType() {
   const diceTypes = [4, 6, 8, 12, 16, 20];
   const index = Math.floor(Math.random() * diceTypes.length);
@@ -592,7 +542,7 @@
         // Call the API to generate the story segment
         const response = await makeAPIRequest("chat", {
           model: "hackathon/qwen3",
-          messages: [{ role: "user", content: prompt }],
+          messages: [{ role: "user", content: prompt  + " /no_think"}],
           temperature: 0.8,
         });
 
@@ -695,7 +645,7 @@
 
           const response = await makeAPIRequest("chat", {
             model: "hackathon/qwen3",
-            messages: [{ role: "user", content: prompt }],
+            messages: [{ role: "user", content: prompt + " /no_think"}],
             temperature: 0.8,
           });
 
@@ -737,7 +687,7 @@
               role: "user",
               content: `In a D&D game, the player says: "${command}". 
                                   Should this be resolved with a dice roll (dice) or as a narrative action (voix)?
-                                  Respond ONLY with "dice" or "voix".`,
+                                  Respond ONLY with "dice" or "voix". /no_think`,
             },
           ],
           temperature: 0.3,
@@ -991,8 +941,24 @@
 
         if (attempts < maxAttempts) {
           gameState.activePlayerIndex = nextPlayerIndex;
+        } 
+        if(checkForGameOver()) {
+            console.log("GAME OVER; EVERYBODY DEAD!")
+            gameState.gameOver = true;
+            endGame();
         }
       }
+    }
+
+    function checkForGameOver() {
+        for (let character of gameState.characters) {
+            console.log(character.hp);
+            if (character.hp > 0) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     // Event listeners
@@ -1004,51 +970,24 @@
       simulateDiceRoll();
     });
 
-    document.getElementById("endGame").addEventListener("click", async () => {
-      const finalStory = gameState.story.join("\n\n");
-      const prompt = `Create an epic fantasy illustration that represents this story: "${finalStory}"`;
-
-      try {
-        const imageRes = await makeAPIRequest("image", {
-          prompt,
-          n: 1,
-          size: "1024x1024",
-        });
-
-        const imageUrl = imageRes?.data?.[0]?.url || "";
-
+    function endGame() {
+        try {
         // Store to localStorage (optional but good for replay)
         localStorage.setItem(
           "adndiFinalStory",
           JSON.stringify({
             theme: gameState.theme,
             characters: gameState.characters,
-            story: finalStory,
-            image: imageUrl,
+            story: gameState.story,
           })
         );
-
-        // Show recap
-        showRecap(finalStory, imageUrl);
       } catch (e) {
         console.error("Failed to generate final image:", e);
-        showRecap(finalStory, "");
-      }
-    });
-    function showRecap(story, imageUrl) {
-      document.getElementById("gameSection").style.display = "none";
-      document.getElementById("recapSection").style.display = "block";
-
-      document.getElementById("finalStory").textContent = story;
-      const img = document.getElementById("finalImage");
-      if (imageUrl) {
-        img.src = imageUrl;
-        img.alt = "Illustration of your journey";
-        img.style.display = "block";
-      } else {
-        img.style.display = "none";
       }
     }
+
+    document.getElementById("endGame").addEventListener("click", endGame);
+
     document.getElementById("restartGame").addEventListener("click", () => {
       localStorage.removeItem("adndiFinalStory");
       document.getElementById("recapSection").style.display = "none";

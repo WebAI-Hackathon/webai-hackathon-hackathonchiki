@@ -218,7 +218,7 @@ const IMAGE_SERVICE = {
       const response = await makeAPIRequest("image", {
         // This should be a POST
         model: "hackathon/text2image",
-        prompt: prompt,
+        prompt: prompt + " /no_think",
         n: 1,
         size: "512x512",
         quality: "hd",
@@ -348,6 +348,7 @@ function generateHTML(finalData, document, story) {
   const htmlContent = `<!DOCTYPE html>
 <html>
 <head>
+    <link rel="stylesheet" href="css/style.css" />
     <title>${finalData.theme} - ADnDI Adventure</title>
     <style>
         body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
@@ -361,7 +362,7 @@ function generateHTML(finalData, document, story) {
     </style>
 </head>
 <body>
-    <h1>${finalData.theme}</h1>
+    <h1 class="header-main">${finalData.theme}</h1>
     
     <div class="illustration">
         ${document.getElementById("storyIllustration").innerHTML}
