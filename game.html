@@ -144,6 +144,7 @@
   </head>
   <body>
     <div class="container">
+<<<<<<< HEAD
       <h1 id="gameThemeTitle">AI Generated Game</h1>
 
       <div class="game-container">
@@ -168,6 +169,33 @@
               <p>
                 "Roll dice", "Attack enemy", "Use potion", "Cast spell", etc.
               </p>
+=======
+        <h1 id="gameThemeTitle">AI Generated Game</h1>
+        
+        <div class="game-container">
+            <div class="story-panel">
+                <h2>The Adventure</h2>
+                <div id="gameScript" class="story-text">
+                    <div class="loading">Preparing your adventure...</div>
+                </div>
+            </div>
+            
+            <div class="actions-panel">
+                <h2>Actions</h2>
+                <div class="dice-section">
+                    <div id="diceResult">Roll the dice to begin!</div>
+                    <button id="rollDice" class="btn-primary">Roll Dice</button>
+                </div>
+                
+                <div class="voix-tool">
+                    <h3>VOIX Integration</h3>
+                    <div class="voix-instructions">
+                        <p>Use VOIX commands to interact with the game:</p>
+                        <p>"Roll dice", "Attack enemy", "Use potion", "Cast spell", etc.</p>
+                    </div>
+                    <div id="voixStatus">Waiting for VOIX command...</div>
+                </div>
+>>>>>>> 7bc03831f6ee3cd6e310fdb86ac4e035bc02373f
             </div>
             <div id="voixStatus">Waiting for VOIX command...</div>
           </div>
@@ -192,6 +220,7 @@
         <button id="endGame" class="btn-secondary">End Adventure</button>
       </div>
     </div>
+<<<<<<< HEAD
     <section id="recapSection" style="display: none; padding: 20px">
       <h2>Your Epic Tale</h2>
       <div id="finalStory" class="story-text"></div>
@@ -207,6 +236,23 @@
     </section>
 
     <script src="js/app.js"></script>
+=======
+<section id="recapSection" style="display:none; padding: 20px;">
+  <h2>Your Epic Tale</h2>
+  <div id="finalStory" class="story-text"></div>
+  <img id="finalImage" src="" style="max-width:100%; margin-top: 20px;" alt="Final illustration">
+  <div style="text-align:center; margin-top:20px;">
+    <button id="restartGame" class="btn-primary">Play Again</button>
+  </div>
+  <tool name="rollDice" class="tool-element" 
+      description="Rolls a Dungeons & Dragons die of a given type (d4, d6, d8, d10, d12, d20)">
+  <input name="dieType" type="text" placeholder="Type of die (e.g., d20)" />
+</tool>
+
+</section>
+
+
+>>>>>>> 7bc03831f6ee3cd6e310fdb86ac4e035bc02373f
     <script>
       // Game state management
       let gameState = {
@@ -489,16 +535,352 @@
         const paragraphs = text.split("\n\n").filter((p) => p.trim() !== "");
 
         let index = 0;
+        
+        // Initialize VOIX tool elements
+        function initVoixTools() {
+            // Dice roller tool
+            const diceRoller = document.getElementById('diceRoller');
+            diceRoller.addEventListener('click', () => {
+                document.getElementById('rollDice').click();
+            });
+            
+            // End game tool
+            const endGameButton = document.getElementById('endGameButton');
+            endGameButton.addEventListener('click', () => {
+                document.getElementById('endGame').click();
+            });
+            
+            // Player action tool
+            const playerAction = document.getElementById('playerAction');
+            playerAction.addEventListener('change', (e) => {
+                const command = e.target.value;
+                document.getElementById('voixStatus').textContent = `VOIX: "${command}"`;
+                processVoixCommand(command);
+            });
+        }
+        function rollDice(dieType) {
+    const diceMatch = dieType.toLowerCase().match(/^d(\d+)$/);
+    if (!diceMatch) {
+        alert('Invalid die type! Use format like d4, d6, d20...');
+        return;
+    }
 
-        function addNextParagraph() {
-          if (index < paragraphs.length) {
-            const p = document.createElement("p");
-            p.textContent = paragraphs[index];
+    const sides = parseInt(diceMatch[1]);
+    const result = Math.floor(Math.random() * sides) + 1;
+
+    const storyElement = document.getElementById('gameScript');
+
+    const resultText = document.createElement('p');
+    resultText.className = 'dice-result';
+    resultText.textContent = `🎲 You rolled a ${dieType.toUpperCase()}: ${result}`;
+    storyElement.appendChild(resultText);
+    storyElement.scrollTop = storyElement.scrollHeight;
+}
+
+        // Render character cards
+        function renderCharacters() {
+            const container = document.getElementById('characterDisplays');
+            container.innerHTML = '';
+            
+            if (!gameState.characters || gameState.characters.length === 0) {
+                container.innerHTML = '<p class="empty-message">No adventurers in your party</p>';
+                return;
+            }
+            
+            gameState.characters.forEach((char, index) => {
+                const charElement = document.createElement('div');
+                charElement.className = 'character-display';
+                charElement.id = `character-${index}`;
+                
+                if (index === gameState.activePlayerIndex) {
+                    charElement.classList.add('highlighted');
+                }
+                
+                const stats = char.stats || {
+                    hp: 10,
+                    maxHp: 10,
+                    attack: 5,
+                    defense: 3
+                };
+                
+                const hpPercent = Math.max(0, (stats.hp / stats.maxHp) * 100);
+                const hpColor = hpPercent > 70 ? '#4CAF50' : 
+                               hpPercent > 30 ? '#FFC107' : '#F44336';
+                
+                charElement.innerHTML = `
+                    <img src="${char.image || 'img/placeholder.png'}" alt="${char.name}">
+                    <h3>${char.name || 'Unknown Hero'}</h3>
+                    <p>Level ${char.level || 1} ${char.type || 'Adventurer'}</p>
+                    <div class="stats">
+                        <div>
+                            <p>HP: ${stats.hp}/${stats.maxHp}</p>
+                            <div class="hp-bar">
+                                <div class="hp-fill" style="width: ${hpPercent}%; background-color: ${hpColor}"></div>
+                            </div>
+                        </div>
+                        <p>Attack: ${stats.attack}</p>
+                        <p>Defense: ${stats.defense}</p>
+                    </div>
+                    ${stats.statusEffects && stats.statusEffects.length > 0 ? `
+                    <div class="status-effects">
+                        ${stats.statusEffects.map(effect => 
+                            `<span class="status-effect status-${effect.type}">${effect.name}</span>`
+                        ).join('')}
+                    </div>
+                    ` : ''}
+                `;
+                container.appendChild(charElement);
+            });
+        }
+        
+        // Generate the next story scene
+        async function generateNextScene() {
+            const storyElement = document.getElementById('gameScript');
+            const loadingDiv = document.createElement('div');
+loadingDiv.className = 'loading';
+loadingDiv.textContent = 'Weaving the tale of your adventure...';
+storyElement.appendChild(loadingDiv);
+            gameState.decisionMade = false;
+            
+            try {
+                let prompt;
+                if (gameState.story.length === 0) {
+                    // Opening scene
+                    prompt = `Create an engaging opening scene for a D&D adventure with the theme: "${gameState.theme}". 
+                        The party consists of: ${gameState.characters.map(c => 
+                            `${c.name} (Level ${c.level} ${c.type})`
+                        ).join(', ')}.
+                        Describe the setting, atmosphere, and initial challenge they face. 
+                        End with a dramatic lead-in to the first challenge. 
+                        Make it vivid and immersive (3-4 sentences).`;
+                } else {
+                    // Continuation scene
+                    const lastAction = gameState.actionType === 'dice' ? 
+                        `rolled a ${gameState.diceResults[gameState.diceResults.length - 1]} on a D20` : 
+                        'used VOIX to describe an action';
+                    
+                    prompt = `Continue the D&D adventure with theme "${gameState.theme}".
+                        Previous events: ${gameState.story.slice(-2).join(' ')}
+                        The party consists of: ${gameState.characters.map(c => 
+                            `${c.name} (Level ${c.level} ${c.type} - HP: ${c.stats.hp}/${c.stats.maxHp})`
+                        ).join(', ')}.
+                        The player ${lastAction}.
+                        Describe what happens next and set up the next challenge. 
+                        Include elements like combat, exploration, or puzzle solving. 
+                        Make it 3-4 sentences long.`;
+                }
+                
+                // Call the API to generate the story segment
+                const response = await makeAPIRequest('chat', {
+                    model: "hackathon/qwen3",
+                    messages: [{ role: "user", content: prompt }],
+                    temperature: 0.8
+                });
+                
+                let sceneText = "The adventure continues...";
+                if (response.choices && response.choices.length > 0) {
+                    sceneText = response.choices[0].message.content;
+                }
+                
+                // Format and display the story
+                gameState.story.push(sceneText);
+                displayStorySegment(sceneText);
+                
+                // Show decision point
+                showDecisionPoint();
+                
+            } catch (error) {
+                console.error('Error generating scene:', error);
+                storyElement.innerHTML = '<div class="error">Failed to generate story segment. Please try again.</div>';
+            }
+        }
+        
+        // Display story segment with typing effect
+        function displayStorySegment(text) {
+            const storyElement = document.getElementById('gameScript');
+            
+            
+            // Split text into paragraphs
+            const paragraphs = text.split('\n\n').filter(p => p.trim() !== '');
+            
+            let index = 0;
+            
+            function addNextParagraph() {
+                if (index < paragraphs.length) {
+                    const p = document.createElement('p');
+                    p.textContent = paragraphs[index];
+                    storyElement.appendChild(p);
+                    storyElement.scrollTop = storyElement.scrollHeight;
+                    index++;
+                    setTimeout(addNextParagraph, 1000);
+                }
+            }
+            const hr = document.createElement('hr');
+hr.style.borderTop = '1px dashed #5c331f';
+hr.style.margin = '15px 0';
+storyElement.appendChild(hr);
+            
+            addNextParagraph();
+        }
+        
+        // Show decision point with options
+        function showDecisionPoint() {
+            const storyElement = document.getElementById('gameScript');
+            const decisionDiv = document.createElement('div');
+            decisionDiv.className = 'decision-point';
+            
+            const actionType = gameState.actionType === 'voix' ? 
+                'VOIX action' : 'dice roll';
+            
+            decisionDiv.innerHTML = `
+                <p><strong>Decision Point</strong></p>
+                <p>${gameState.characters[gameState.activePlayerIndex].name} must take action!</p>
+                <p>Use VOIX to describe your action or click "Roll D20" for a random outcome.</p>
+                <p>Last action: ${actionType}</p>
+            `;
+            storyElement.appendChild(decisionDiv);
+            
+            // Highlight active player
+            renderCharacters();
+        }
+        
+        // Process VOIX command
+        async function processVoixCommand(command) {
+            if (gameState.decisionMade || gameState.gameOver) return;
+            
+            gameState.decisionMade = true;
+            gameState.actionType = 'voix';
+            
+            // Display command in story
+            appendToStory("voix-action", `${gameState.characters[gameState.activePlayerIndex].name}: "${command}"`);
+            
+            // Determine action type
+            const actionType = await determineActionType(command);
+            
+            if (actionType === 'dice') {
+                // VOIX command is converted to dice roll
+                simulateDiceRoll();
+            } else {
+                // Process as VOIX narrative action
+                try {
+                    const prompt = `In the D&D adventure with theme "${gameState.theme}", 
+                        the player ${gameState.characters[gameState.activePlayerIndex].name} decides to: "${command}".
+                        Describe the outcome of this decision in 2-3 sentences.`;
+                    
+                    const response = await makeAPIRequest('chat', {
+                        model: "hackathon/qwen3",
+                        messages: [{ role: "user", content: prompt }],
+                        temperature: 0.8
+                    });
+                    
+                    let outcomeText = "The plan unfolds...";
+                    if (response.choices && response.choices.length > 0) {
+                        outcomeText = response.choices[0].message.content;
+                    }
+                    
+                    // Add to story
+                    gameState.story.push(outcomeText);
+                    
+                    // Display outcome
+                    const outcomeDiv = document.createElement('div');
+                    outcomeDiv.innerHTML = `<p>${outcomeText}</p>`;
+                    document.getElementById('gameScript').appendChild(outcomeDiv);
+                    
+                    // Apply status effects based on command
+                    applyVoixEffects(command);
+                    
+                } catch (error) {
+                    console.error('Error processing VOIX command:', error);
+                    appendToStory("error", "Failed to process your VOIX command. Please try again.");
+                }
+                
+                // Generate next scene
+                await generateNextScene();
+            }
+        }
+        
+        // Determine action type (dice or VOIX)
+        async function determineActionType(command) {
+            try {
+                const response = await makeAPIRequest('chat', {
+                    model: "hackathon/qwen3",
+                    messages: [{
+                        role: "user",
+                        content: `In a D&D game, the player says: "${command}". 
+                                  Should this be resolved with a dice roll (dice) or as a narrative action (voix)?
+                                  Respond ONLY with "dice" or "voix".`
+                    }],
+                    temperature: 0.3
+                });
+                
+                if (response.choices && response.choices.length > 0) {
+                    const decision = response.choices[0].message.content.trim().toLowerCase();
+                    return (decision === 'voix') ? 'voix' : 'dice';
+                }
+            } catch (error) {
+                console.error('Error deciding action type:', error);
+            }
+            return 'dice'; // Fallback to dice
+        }
+        
+        // Apply effects based on VOIX command
+        function applyVoixEffects(command) {
+            const character = gameState.characters[gameState.activePlayerIndex];
+            const stats = character.stats;
+            
+            // Ensure statusEffects exists
+            if (!stats.statusEffects || !Array.isArray(stats.statusEffects)) {
+                stats.statusEffects = [];
+            }
+            
+            // Check for common actions
+            if (command.toLowerCase().includes('attack')) {
+                // Simulate attack damage
+                const damage = Math.floor(Math.random() * 8) + 2;
+                stats.attack += 1;
+                appendToStory("system", `${character.name} gains +1 attack from battle experience!`);
+            }
+            else if (command.toLowerCase().includes('heal') || command.toLowerCase().includes('potion')) {
+                // Apply healing
+                const healAmount = Math.floor(Math.random() * 10) + 5;
+                stats.hp = Math.min(stats.maxHp, stats.hp + healAmount);
+                appendToStory("system", `${character.name} restores ${healAmount} HP!`);
+            }
+            else if (command.toLowerCase().includes('defend') || command.toLowerCase().includes('shield')) {
+                // Apply defense boost
+                stats.defense += 2;
+                if (!stats.statusEffects.some(e => e.name === "Shielded")) {
+                    stats.statusEffects.push({
+                        name: "Shielded",
+                        type: "boost",
+                        duration: 3
+                    });
+                    appendToStory("system", `${character.name} gains a defensive shield!`);
+                }
+            }
+            else if (command.toLowerCase().includes('cast') || command.toLowerCase().includes('spell')) {
+                // Apply magic effect
+                if (!stats.statusEffects.some(e => e.name === "Empowered")) {
+                    stats.statusEffects.push({
+                        name: "Empowered",
+                        type: "boost",
+                        duration: 2
+                    });
+                    appendToStory("system", `${character.name}'s magic empowers the party!`);
+                }
+            }
+        }
+        
+        // Append to story panel
+        function appendToStory(className, text) {
+            const storyElement = document.getElementById('gameScript');
+            const p = document.createElement('p');
+            p.className = className;
+            p.textContent = text;
             storyElement.appendChild(p);
             storyElement.scrollTop = storyElement.scrollHeight;
             index++;
             setTimeout(addNextParagraph, 1000);
-          }
         }
 
         addNextParagraph();
@@ -920,9 +1302,9 @@
         document.getElementById("gameSection").style.display = "block";
         location.reload(); // Or re-run initGame() if you want to avoid full reload
       });
-
-      // Start the game
-      initGame();
+        // Start the game
+        initGame();
+        window.rollDice = rollDice;
     </script>
   </body>
 </html>
