@@ -134,7 +134,7 @@
                 <h2>Actions</h2>
                 <div class="dice-section">
                     <div id="diceResult">Roll the dice to begin!</div>
-                    <button id="rollDice" class="btn-primary">Roll D20</button>
+                    <button id="rollDice" class="btn-primary">Roll Dice</button>
                 </div>
                 
                 <div class="voix-tool">
@@ -171,7 +171,13 @@
   <div style="text-align:center; margin-top:20px;">
     <button id="restartGame" class="btn-primary">Play Again</button>
   </div>
+  <tool name="rollDice" class="tool-element" 
+      description="Rolls a Dungeons & Dragons die of a given type (d4, d6, d8, d10, d12, d20)">
+  <input name="dieType" type="text" placeholder="Type of die (e.g., d20)" />
+</tool>
+
 </section>
+
 
     <script>
         // Make API request function
@@ -302,7 +308,25 @@
                 processVoixCommand(command);
             });
         }
-        
+        function rollDice(dieType) {
+    const diceMatch = dieType.toLowerCase().match(/^d(\d+)$/);
+    if (!diceMatch) {
+        alert('Invalid die type! Use format like d4, d6, d20...');
+        return;
+    }
+
+    const sides = parseInt(diceMatch[1]);
+    const result = Math.floor(Math.random() * sides) + 1;
+
+    const storyElement = document.getElementById('gameScript');
+
+    const resultText = document.createElement('p');
+    resultText.className = 'dice-result';
+    resultText.textContent = `🎲 You rolled a ${dieType.toUpperCase()}: ${result}`;
+    storyElement.appendChild(resultText);
+    storyElement.scrollTop = storyElement.scrollHeight;
+}
+
         // Render character cards
         function renderCharacters() {
             const container = document.getElementById('characterDisplays');
@@ -814,6 +838,8 @@ document.getElementById('restartGame').addEventListener('click', () => {
         
         // Start the game
         initGame();
+        window.rollDice = rollDice;
+
     </script>
 </body>
 </html>
