@@ -102,6 +102,7 @@ async function makeAPIRequest(path, payload, retries = 3) {
 function generateCharacterStats(characterData) {
   return {
     hp: 10 + parseInt(characterData.level) * 5,
+    maxHp: 10 + parseInt(characterData.level) * 5,
     attack: 3 + parseInt(characterData.level),
     defense: 2 + parseInt(characterData.level),
   };

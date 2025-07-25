@@ -7,6 +7,23 @@
   <title>ADnDI - Game</title>
   <link rel="stylesheet" href="css/style.css" />
   <style>
+    .hp-bar {
+  width: 100%;
+  height: 16px;
+  background-color: #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+  margin-top: 4px;
+}
+
+.hp-fill {
+  height: 100%;
+  width: 0%;
+  transition: width 0.4s ease, background-color 0.4s ease;
+  border-radius: 8px 0 0 8px;
+}
+
     .game-container {
       display: flex;
       gap: 20px;
@@ -176,7 +193,7 @@
       <div class="story-panel">
         <h2>The Adventure</h2>
         <div id="gameScript" class="story-text">
-          <div class="loading">Preparing your adventure...</div>
+          <p class="loading">Preparing your adventure...</p>
         </div>
       </div>
 
@@ -414,6 +431,11 @@
        storyElement.scrollTop = storyElement.scrollHeight;
      }
 */
+    function getRandomDieType() {
+  const diceTypes = [4, 6, 8, 12, 16, 20];
+  const index = Math.floor(Math.random() * diceTypes.length);
+  return `d${diceTypes[index]}`;
+}
     // Render character cards
     async function renderCharacters() {
       // Container for all of the player cards
@@ -476,7 +498,7 @@
           attack: 5,
           defense: 3,
         };
-
+        
         // Player stats
         const hpPercent = Math.max(0, (stats.hp / stats.maxHp) * 100);
         const hpColor =
@@ -629,11 +651,10 @@
         gameState.actionType === "voix" ? "VOIX action" : "dice roll";
 
       decisionDiv.innerHTML = `
-                <p><strong>Decision Point</strong></p>
-                <p>${gameState.characters[gameState.activePlayerIndex].name
-        } must take action!</p>
-                <p>Use VOIX to describe your action or click "Roll D20" for a random outcome.</p>
-                <p>Last action: ${actionType}</p>
+                <p><strong>Decision Point</strong><br>
+                ${gameState.characters[gameState.activePlayerIndex].name
+        } must take action!<br>
+                Roll your dice!</p>
             `;
       storyElement.appendChild(decisionDiv);
 
@@ -809,39 +830,42 @@
     }
 
     // Roll a D20 die
-    function rollD20() {
-      return Math.floor(Math.random() * 20) + 1;
-    }
+    function rollDice(dieType) {
+  const sides = parseInt(dieType.replace("d", ""));
+  return Math.floor(Math.random() * sides) + 1;
+}
+
 
     // Simulate dice roll programmatically
     function simulateDiceRoll() {
-      const roll = rollD20();
-      const diceElement = document.getElementById("diceResult");
+  const dieType = getRandomDieType(); // Random dice: d4, d6, d12, etc.
+  const roll = rollDice(dieType);
+  const diceElement = document.getElementById("diceResult");
 
-      // Show rolling animation
-      diceElement.textContent = "Rolling...";
-      diceElement.classList.add("dice-animation");
+  // Show rolling animation
+  diceElement.textContent = `Rolling a ${dieType.toUpperCase()}...`;
+  diceElement.classList.add("dice-animation");
 
-      setTimeout(() => {
-        diceElement.classList.remove("dice-animation");
-        diceElement.textContent = `${gameState.characters[gameState.activePlayerIndex].name
-          } rolled: ${roll}`;
+  setTimeout(() => {
+    diceElement.classList.remove("dice-animation");
+    diceElement.textContent = `${gameState.characters[gameState.activePlayerIndex].name} rolled a ${dieType.toUpperCase()}: ${roll}`;
 
-        // Process dice roll
-        gameState.actionType = "dice";
-        gameState.diceResults.push(roll);
-        updateCharacterStats(roll);
-        renderCharacters();
+    // Process dice roll
+    gameState.actionType = "dice";
+    gameState.diceResults.push(roll);
+    updateCharacterStats(roll, dieType);
+    renderCharacters();
 
-        // Generate next scene
-        generateNextScene();
-      }, 1500);
-    }
+    // Generate next scene
+    generateNextScene();
+  }, 1500);
+}
 
     // Update character stats based on dice roll
-    function updateCharacterStats(roll) {
+    function updateCharacterStats(roll, dieType = d20) {
       const character = gameState.characters[gameState.activePlayerIndex];
       const stats = character.stats;
+      const sides = parseInt(dieType.replace("d", ""));
 
       // Ensure statusEffects exists
       if (!stats.statusEffects || !Array.isArray(stats.statusEffects)) {
@@ -849,10 +873,10 @@
       }
 
       // Add dice roll to story
-      appendToStory("dice-roll", `${character.name} rolls a D20: ${roll}`);
+      appendToStory("dice-roll", `${character.name} rolls a ${dieType.toUpperCase()}: ${roll}`);
 
       // Determine effect based on roll
-      if (roll >= 18) {
+      if (roll >= Math.floor(sides*0.9)) {
         // Critical success
         stats.hp = Math.min(stats.hp + 5, stats.maxHp);
         stats.attack += 2;
@@ -869,7 +893,7 @@
             duration: 3,
           });
         }
-      } else if (roll >= 14) {
+      } else if (roll >= Math.floor(sides*0.8)) {
         // Great success
         stats.hp = Math.min(stats.hp + 3, stats.maxHp);
         stats.attack += 1;
@@ -877,7 +901,7 @@
           "system",
           `${character.name} succeeds! +3 HP, +1 attack`
         );
-      } else if (roll >= 10) {
+      } else if (roll >= Math.floor(sides*0.6)) {
         // Success
         stats.hp = Math.min(stats.hp + 1, stats.maxHp);
         appendToStory("system", `${character.name} succeeds! +1 HP`);
@@ -887,7 +911,7 @@
           "system",
           `${character.name}'s attempt has no significant effect`
         );
-      } else if (roll >= 3) {
+      } else if (roll >= Math.floor(sides*0.3)) {
         // Failure
         const damage = Math.max(1, Math.floor(Math.random() * 4) + 1);
         stats.hp = Math.max(0, stats.hp - damage);
@@ -923,6 +947,7 @@
         if (effect.type === "poison" && effect.duration > 0) {
           stats.hp = Math.max(0, stats.hp - 2);
         }
+        
       });
 
       // Remove expired effects
