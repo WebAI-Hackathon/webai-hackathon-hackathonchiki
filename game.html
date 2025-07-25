@@ -29,14 +29,19 @@
       gap: 20px;
       flex-wrap: wrap;
     }
-
+    
+    .characters-container{
+        flex: 1;
+        min-width: 300px;
+    
+    }
     .story-panel {
-      flex: 3;
+      flex: 1;
       min-width: 300px;
     }
 
     .actions-panel {
-      flex: 1;
+      
       min-width: 250px;
     }
 
@@ -45,17 +50,19 @@
       border: 2px solid #69583e;
       border-radius: 10px;
       padding: 20px;
-      min-height: 300px;
+      min-height: 380px;
       max-height: 500px;
       overflow-y: auto;
       font-family: "Macondo Swash Caps", cursive;
       font-size: 18px;
       line-height: 1.6;
+       contain: size;
     }
 
     .story-text p {
       margin-bottom: 15px;
       animation: fadeIn 0.5s ease-in;
+         
     }
 
     @keyframes fadeIn {
@@ -89,22 +96,27 @@
       background-color: rgba(233, 207, 153, 0.7);
       border: 2px solid #69583e;
       border-radius: 10px;
-      padding: 20px;
+      
       text-align: center;
-      margin-top: 20px;
+      
     }
-
+    #dice-result{
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
     .dice-result {
       font-size: 24px;
       font-weight: bold;
-      margin: 15px 0;
-      min-height: 40px;
+      min-height: 20px;
     }
 
     .dice-animation {
       animation: rollDice 1s ease-out;
     }
-
+    #rollDice{
+        margin-top: 0;
+        
+    }
     @keyframes rollDice {
       0% {
         transform: rotate(0deg) scale(1);
@@ -130,14 +142,18 @@
       margin-top: 20px;
       display: none;
     }
-
+    .character-display{
+        width: 150px;
+    }
     .highlighted {
       box-shadow: 0 0 15px gold;
       transform: scale(1.05);
       transition: all 0.3s ease;
       z-index: 10;
     }
-
+    .characters-grid{
+        margin-top: 0;
+    }
     .status-effect {
       display: inline-block;
       padding: 3px 8px;
@@ -180,6 +196,10 @@
       display: none;
       /* Hidden but accessible to VOIX */
     }
+    #gameThemeTitle{
+        color: #311e20;
+        margin-top: 30px;
+    }
   </style>
 </head>
 
@@ -187,20 +207,19 @@
   <tool name="roll_dice_button" description="Rolls a Dice"></tool>
 
   <div class="container">
-    <h1 id="gameThemeTitle">AI Generated Game</h1>
+    <h3 id="gameThemeTitle">AI Generated Game</h3>
 
     <div class="game-container">
       <div class="story-panel">
-        <h2>The Adventure</h2>
+        <!--<h3>The Adventure</h3>-->
         <div id="gameScript" class="story-text">
           <p class="loading">Preparing your adventure...</p>
         </div>
-      </div>
-
-      <div class="actions-panel">
-        <h2>Actions</h2>
+        <div class="actions-panel">
+            <br>
+        
         <div class="dice-section">
-          <div id="diceResult">Roll the dice to begin!</div>
+          <div id="diceResult">Roll the dice to change your story!</div>
           <button id="rollDice" class="btn-primary">Roll Dice</button>
         </div>
 
@@ -215,23 +234,24 @@
           <div id="voixStatus">Waiting for VOIX command...</div>
         </div>
       </div>
+      <div class="actions">
+      <button id="endGame" class="btn-primary">End Adventure</button>
+    </div>
+      </div>
+    <div class="characters-container">
+      <!--<h3>Your Party</h3>-->
+      <div id="characterDisplays" class="characters-grid"></div>
     </div>
 
-    <!-- VOIX-accessible tool elements -->
-    <!--<div class="tool-element">
-        <tool id="diceRoller" type="button">Roll Dice</tool>
-        <tool id="endGameButton" type="button">End Game</tool>
-        <tool id="playerAction" type="input">Describe your action</tool>
-      </div>-->
+      
+    </div>
 
     <div class="characters-container">
       
       <div id="characterDisplays" class="characters-grid"></div>
     </div>
 
-    <div class="actions">
-      <button id="endGame" class="btn-secondary">End Adventure</button>
-    </div>
+    
   </div>
   <section id="recapSection" style="display: none; padding: 20px">
     <h2>Your Epic Tale</h2>
@@ -388,49 +408,6 @@
       }
     }
 
-    // Initialize VOIX tool elements
-   /* function initVoixTools() {
-      // Dice roller tool
-      const diceRoller = document.getElementById("diceRoller");
-      diceRoller.addEventListener("click", () => {
-        document.getElementById("rollDice").click();
-      });
-
-      // End game tool
-      const endGameButton = document.getElementById("endGameButton");
-      endGameButton.addEventListener("click", () => {
-        document.getElementById("endGame").click();
-      });
-
-      // Player action tool
-      const playerAction = document.getElementById("playerAction");
-      playerAction.addEventListener("change", (e) => {
-        const command = e.target.value;
-        document.getElementById(
-          "voixStatus"
-        ).textContent = `VOIX: "${command}"`;
-        processVoixCommand(command);
-      });
-    }*/
-    /* function rollDice(dieType) {
-       const diceMatch = dieType.toLowerCase().match(/^d(\d+)$/);
-       if (!diceMatch) {
-         alert("Invalid die type! Use format like d4, d6, d20...");
-         return;
-       }
-
-       const sides = parseInt(diceMatch[1]);
-       const result = Math.floor(Math.random() * sides) + 1;
-
-       const storyElement = document.getElementById("gameScript");
-
-       const resultText = document.createElement("p");
-       resultText.className = "dice-result";
-       resultText.textContent = `🎲 You rolled a ${dieType.toUpperCase()}: ${result}`;
-       storyElement.appendChild(resultText);
-       storyElement.scrollTop = storyElement.scrollHeight;
-     }
-*/
     function getRandomDieType() {
   const diceTypes = [4, 6, 8, 12, 16, 20];
   const index = Math.floor(Math.random() * diceTypes.length);
@@ -516,13 +493,13 @@
           }</p>
                           <div class="stats">
                               <div>
-                                  <p>HP: ${stats.hp}/${stats.maxHp}</p>
-                                  <div class="hp-bar">
+                                <div class="hp-bar">
                                       <div class="hp-fill" style="width: ${hpPercent}%; background-color: ${hpColor}"></div>
                                   </div>
+                                  <p>HP: ${stats.hp}/${stats.maxHp}</p>
+                                  
                               </div>
-                              <p>Attack: ${stats.attack}</p>
-                              <p>Defense: ${stats.defense}</p>
+                              
                           </div>
                           ${stats.statusEffects &&
             stats.statusEffects.length > 0
@@ -592,7 +569,7 @@
         // Call the API to generate the story segment
         const response = await makeAPIRequest("chat", {
           model: "hackathon/qwen3",
-          messages: [{ role: "user", content: prompt }],
+          messages: [{ role: "user", content: prompt  + " /no_think"}],
           temperature: 0.8,
         });
 
@@ -695,7 +672,7 @@
 
           const response = await makeAPIRequest("chat", {
             model: "hackathon/qwen3",
-            messages: [{ role: "user", content: prompt }],
+            messages: [{ role: "user", content: prompt + " /no_think"}],
             temperature: 0.8,
           });
 
@@ -737,7 +714,7 @@
               role: "user",
               content: `In a D&D game, the player says: "${command}". 
                                   Should this be resolved with a dice roll (dice) or as a narrative action (voix)?
-                                  Respond ONLY with "dice" or "voix".`,
+                                  Respond ONLY with "dice" or "voix". /no_think`,
             },
           ],
           temperature: 0.3,
@@ -1004,51 +981,25 @@
       simulateDiceRoll();
     });
 
-    document.getElementById("endGame").addEventListener("click", async () => {
-      const finalStory = gameState.story.join("\n\n");
-      const prompt = `Create an epic fantasy illustration that represents this story: "${finalStory}"`;
-
-      try {
-        const imageRes = await makeAPIRequest("image", {
-          prompt,
-          n: 1,
-          size: "1024x1024",
-        });
-
-        const imageUrl = imageRes?.data?.[0]?.url || "";
-
+    function endGame() {
+        try {
         // Store to localStorage (optional but good for replay)
         localStorage.setItem(
           "adndiFinalStory",
           JSON.stringify({
             theme: gameState.theme,
             characters: gameState.characters,
-            story: finalStory,
-            image: imageUrl,
+            story: gameState.story,
           })
         );
-
-        // Show recap
-        showRecap(finalStory, imageUrl);
       } catch (e) {
         console.error("Failed to generate final image:", e);
-        showRecap(finalStory, "");
       }
-    });
-    function showRecap(story, imageUrl) {
-      document.getElementById("gameSection").style.display = "none";
-      document.getElementById("recapSection").style.display = "block";
-
-      document.getElementById("finalStory").textContent = story;
-      const img = document.getElementById("finalImage");
-      if (imageUrl) {
-        img.src = imageUrl;
-        img.alt = "Illustration of your journey";
-        img.style.display = "block";
-      } else {
-        img.style.display = "none";
-      }
+      window.location.href = "final-story.html";
     }
+
+    document.getElementById("endGame").addEventListener("click", endGame);
+
     document.getElementById("restartGame").addEventListener("click", () => {
       localStorage.removeItem("adndiFinalStory");
       document.getElementById("recapSection").style.display = "none";

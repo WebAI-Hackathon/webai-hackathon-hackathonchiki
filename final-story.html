@@ -43,7 +43,6 @@
             renderCharacterCards();
           } catch (e) {
             console.error("Error loading characters:", e);
-            localStorage.removeItem("adndiCharacters");
           }
         }
       }
@@ -56,11 +55,6 @@
           story: "The story of your adventure...",
         };
 
-        // mock
-        finalData.story = [
-          '\n\nThe skeletal remains of the ancient dungeon loom beneath a bruised, twilight sky, its crumbling stone archway choked with thorned vines that writhe like serpents in the wind. The air reeks of iron and rot, and every shadow pulses faintly, as if the darkness itself is breathing—waiting. As the cleric traces a trembling hand over the rune-carved rubble barricading the entrance, their holy symbol flares cold and violet, whispering of a corruption that gnaws at the world\'s bones... just before the Fighter’s boot cracks the earth loose, sending a cascade of blackened stones plummeting into the abyss below, and from the depths, a guttural, wet shriek erupts: *"THE SHATTERED GOD HUNGERS."*',
-          "\n\nThe collapse triggers a surge of shadowy tendrils that lash from the walls, coalescing into a **Ravenous Shadow** (HP: 18, AC: 14, Speed: 0 ft., Fly 20 ft. (hover))—a writhing mass of void-stained mist with glowing crimson eyes. It shrieks as jagged runes on the chamber floor flare to life, sapping the Cleric’s strength (Constitution save DC 13 or take 2d6 necrotic damage each round). The Fighter, grappling with debris, spots a cracked altar ahead bearing half of the shattered artifact—but the Cleric must first channel radiant energy to disrupt the curse’s hold on the room (Religion check DC 14) or risk unleashing a wave of hungering shadows.",
-        ];
         console.log(finalData.story);
 
         // Set theme title
@@ -76,7 +70,7 @@
         await generateFinalIllustration();
 
         // Display story
-        document.getElementById("finalStoryText").innerHTML = formatStoryText(
+        document.getElementById("finalStoryText").innerHTML = await formatStoryText(
           finalData.story
         );
       }
@@ -186,7 +180,7 @@
         try {
           const response = await makeAPIRequest("image", {
             model: "hackathon/text2image",
-            prompt: prompt,
+            prompt: prompt + " /no_think",
             n: 1,
             size: "512x512",
           });
@@ -208,22 +202,57 @@
         }
       }
 
-      function formatStoryText(text) {
+      async function formatStoryText(text) {
         // Simple formatting
         let textRes = "";
 
         for (let paragraph of text) {
           textRes += paragraph
             .replace(/\n\n/g, "</p><p>")
-            .replace(/\n/g, "<br>");
+            .replace(/\n/g, "<br>")
+            .replace("**", "")
+            .replace("*", "");
         }
-
-        return textRes;
+        let testRes = await generateStorySummary(textRes)
+        return testRes
       }
 
-      document.getElementById("downloadStory").addEventListener("click", () => {
+      async function generateStorySummary(text) {
+        const prompt = `Make an interesting, thrilling and a vivid summary of the following story in less than 300 words:
+      ${text} /no_think. Don't forget to make the story interesting and epic and not over the limit of 300 words`;
 
-        const htmlContent = generateHTML(finalData, document, formatStoryText(finalData.story));
+        const response = await makeAPIRequest("chat", {
+          model: "hackathon/qwen3",
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are a creative fantasy writer who specializes in vivid story telling. /no_think",
+            },
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+          temperature: 0.7,
+        });
+
+        const story = response.choices[0].message.content.trim();
+
+        // Basic validation
+        if (!story || story.length < 50) {
+          throw new Error("story generation failed - response too short");
+        }
+
+        return story;
+      }
+
+      document.getElementById("downloadStory").addEventListener("click", async () => {
+        const htmlContent = generateHTML(
+          finalData,
+          document,
+          await formatStoryText(finalData.story)
+        );
 
         console.log(htmlContent);
 

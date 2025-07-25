@@ -25,13 +25,14 @@ html, body{
   margin: 0;
   padding: 0;
     overflow:scroll;
-    
+   scrollbar-width: none; 
 }
 
 .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
+    text-align: center;
 }
 
 h1, h2, h3 {

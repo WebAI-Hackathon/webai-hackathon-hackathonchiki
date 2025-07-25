@@ -212,7 +212,7 @@ const IMAGE_SERVICE = {
       0,
       900
     )}. 
-    Fantasy art, digital painting, highly detailed, vibrant colors, character centered`;
+    Fantasy art, digital painting, highly detailed, vibrant colors, character centered /no_think`;
 
     try {
       const response = await makeAPIRequest("image", {
@@ -348,6 +348,7 @@ function generateHTML(finalData, document, story) {
   const htmlContent = `<!DOCTYPE html>
 <html>
 <head>
+    <link rel="stylesheet" href="css/style.css" />
     <title>${finalData.theme} - ADnDI Adventure</title>
     <style>
         body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
@@ -361,7 +362,7 @@ function generateHTML(finalData, document, story) {
     </style>
 </head>
 <body>
-    <h1>${finalData.theme}</h1>
+    <h1 class="header-main">${finalData.theme}</h1>
     
     <div class="illustration">
         ${document.getElementById("storyIllustration").innerHTML}
