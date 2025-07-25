@@ -209,7 +209,9 @@
         for (let paragraph of text) {
           textRes += paragraph
             .replace(/\n\n/g, "</p><p>")
-            .replace(/\n/g, "<br>");
+            .replace(/\n/g, "<br>")
+            .replace("**", "")
+            .replace("*", "");
         }
 
         return textRes;

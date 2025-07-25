@@ -212,13 +212,13 @@ const IMAGE_SERVICE = {
       0,
       900
     )}. 
-    Fantasy art, digital painting, highly detailed, vibrant colors, character centered`;
+    Fantasy art, digital painting, highly detailed, vibrant colors, character centered /no_think`;
 
     try {
       const response = await makeAPIRequest("image", {
         // This should be a POST
         model: "hackathon/text2image",
-        prompt: prompt + " /no_think",
+        prompt: prompt,
         n: 1,
         size: "512x512",
         quality: "hd",
