@@ -80,9 +80,11 @@
 
         try {
           // Generate all image URLs in parallel
+          log("Logging characters", characters);
+
           const imageRequests = characters.map((char) =>
-            generateCharacterImageUrl(char.image).catch((error) => {
-              console.error("Image generation failed:", error);
+            IMAGE_SERVICE.generateCharacterImage(char.description, char.type).catch((error) => {
+              console.error("Aboba Image generation failed:", error);
               return IMAGE_SERVICE.getPlaceholderImage(
                 char.type,
                 char.description
@@ -92,6 +94,9 @@
 
           // Wait for all requests to complete
           const imageUrls = await Promise.all(imageRequests);
+
+          log("Logging the Image Requests", imageRequests);
+          log("Logging the image urls", imageUrls);
 
           // Prefetch and validate images
           const loadedUrls = await IMAGE_SERVICE.prefetchImages(imageUrls);
@@ -145,7 +150,7 @@
               deleteCharacter(index);
             });
           });
-          
+
           // ... rest of your event listener code ...
         } catch (error) {
           console.error("Error rendering characters:", error);
@@ -164,25 +169,6 @@
         }
       }
 
-      // ... existing code ...
-
-      // Add prompt enhancement function
-      /*
-      function enhancePrompt(description, archetype) {
-        const styleGuide = {
-          barbarian: "dynamic pose, battle-scarred, wild hair, dramatic lighting",
-          wizard: "intricate robes, glowing magical effects, scholarly demeanor",
-          rogue: "shadowy, agile pose, leather armor, mysterious atmosphere",
-          // Add more archetypes as needed
-        };
-
-        return `D&D ${archetype} character portrait: ${description.substring(0, 900)}.
-          ${styleGuide[archetype.toLowerCase()] || ''}
-          Fantasy art, digital painting, highly detailed, vibrant colors,
-          character centered, artstation trending`;
-      }*/
-
-      // ... rest of file ...
       function showLoadingState(index, isLoading) {
         const card = document.querySelector(
           `.character-card[data-index="${index}"]`
@@ -199,45 +185,7 @@
               `;
         }
       }
-      /*
-            function getClassPlaceholder(archetype) {
-              // SVG placeholder with class colors
-              const colors = {
-                barbarian: "#772422",
-                bard: "#5a3d7a",
-                cleric: "#e0a040",
-                druid: "#5c7c3a",
-                fighter: "#8a8a8a",
-                monk: "#d4b16a",
-                paladin: "#c0c0e0",
-                ranger: "#6b8c42",
-                rogue: "#735c3a",
-                sorcerer: "#8a2be2",
-                warlock: "#6a287e",
-                wizard: "#2a4b8d",
-              };
 
-              const color = colors[archetype.toLowerCase()] || "#4a2c82";
-
-              return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"  height="512" viewBox="0 0 512 512">
-              <rect  height="512" fill="${color}" />
-          </svg>`;
-            }
-
-            function escapeHTML(str) {
-              return str.replace(
-                /[&<>'"]/g,
-                (tag) =>
-                  ({
-                    "&": "&amp;",
-                    "<": "&lt;",
-                    ">": "&gt;",
-                    "'": "&#39;",
-                    '"': "&quot;",
-                  }[tag])
-              );
-            }
-      */
       // tialize
       loadCharacters();
     </script>

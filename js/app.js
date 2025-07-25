@@ -162,133 +162,6 @@ async function generateCharacterDescription(formData) {
   }
 }
 
-async function generateCharacterImageUrl(prompt) {
-  try {
-    const response = await makeAPIRequest("image", {
-      // This should be a POST
-      model: "hackathon/text2image",
-      prompt: prompt,
-      n: 1,
-      size: "512x512",
-      quality: "hd",
-      style: "fantasy",
-    });
-    const imageData = response.data[0];
-    let imageUrl = null;
-
-    // Handle URL-based response
-    if (imageData?.url) {
-      imageUrl = imageData.url;
-    }
-    // Handle base64 response
-    else if (imageData?.b64_json) {
-      imageUrl = `data:image/png;base64,${imageData.b64_json}`;
-
-      // Validate base64 format
-      if (!/^[A-Za-z0-9+/]+={0,2}$/.test(imageData.b64_json)) {
-        throw new Error("Invalid base64 image data");
-      }
-    }
-
-    if (!imageUrl) throw new Error("No image data received");
-
-    // Verify image loads successfully
-    //await verifyImageLoad(imageUrl);
-
-    return imageUrl;
-  } catch (error) {
-    console.error("Image generation failed:", error);
-    return getLocalPlaceholder(archetype);
-  }
-}
-
-// Improved Image Generation
-async function generateCharacterImage(description, archetype) {
-  const prompt = `D&D ${archetype} character portrait: ${description.substring(
-    0,
-    900
-  )}. 
-    Fantasy art, digital painting, highly detailed, vibrant colors, character centered`;
-
-  try {
-    const response = await makeAPIRequest("image", {
-      // This should be a POST
-      model: "hackathon/text2image",
-      prompt: prompt,
-      n: 1,
-      size: "512x512",
-      quality: "hd",
-      style: "fantasy",
-    });
-    const imageData = response.data[0];
-    let imageUrl = null;
-
-    // Handle URL-based response
-    if (imageData?.url) {
-      imageUrl = imageData.url;
-    }
-    // Handle base64 response
-    else if (imageData?.b64_json) {
-      imageUrl = `data:image/png;base64,${imageData.b64_json}`;
-
-      // Validate base64 format
-      if (!/^[A-Za-z0-9+/]+={0,2}$/.test(imageData.b64_json)) {
-        throw new Error("Invalid base64 image data");
-      }
-    }
-
-    if (!imageUrl) throw new Error("No image data received");
-
-    // Verify image loads successfully
-    //await verifyImageLoad(imageUrl);
-
-    return prompt;
-  } catch (error) {
-    console.error("Image generation failed:", error);
-    return getLocalPlaceholder(archetype);
-  }
-}
-
-/*
-async function verifyImageLoad(imagePrompt) {
-  const response = await makeAPIRequest("image", {
-    // This should be a POST
-    model: "hackathon/text2image",
-    prompt: imagePrompt,
-    n: 1,
-    size: "512x512",
-    quality: "hd",
-    style: "fantasy",
-  });
-
-  const imageData = response.data[0];
-  let url = null;
-
-  // Handle URL-based response
-  if (imageData?.url) {
-    url = imageData.url;
-  }
-  // Handle base64 response
-  else if (imageData?.b64_json) {
-    url = `data:image/png;base64,${imageData.b64_json}`;
-
-    // Validate base64 format
-    if (!/^[A-Za-z0-9+/]+={0,2}$/.test(imageData.b64_json)) {
-      throw new Error("Invalid base64 image data");
-    }
-  }
-
-  if (!url) throw new Error("No image data received");
-
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(url);
-    img.onerror = () => reject(new Error("Image failed to load"));
-    img.src = url;
-  });
-}
-  */
-
 function getLocalPlaceholder(archetype) {
   // SVG placeholder with class colors
   const colors = {
@@ -318,18 +191,11 @@ async function generateCharacter(characterData) {
     // Generate description
     const description = await generateCharacterDescription(characterData);
 
-    // Generate image (with retries built into makeAPIRequest)
-    const imagePrompt = await generateCharacterImage(
-      description,
-      characterData.archetype
-    );
-
     return {
       name: characterData.name,
       level: parseInt(characterData.level) || 1,
       type: characterData.archetype,
       description: description,
-      image: imagePrompt,
       stats: generateCharacterStats(characterData),
       createdAt: new Date().toISOString(),
     };
@@ -341,30 +207,48 @@ async function generateCharacter(characterData) {
 
 const IMAGE_SERVICE = {
   async generateCharacterImage(description, archetype, characterId = null) {
-    try {
-      const response = await makeAPIRequest("generate-image", {
-        prompt: description,
-        archetype,
-        characterId,
-      });
+    const prompt = `D&D ${archetype} character portrait: ${description.substring(
+      0,
+      900
+    )}. 
+    Fantasy art, digital painting, highly detailed, vibrant colors, character centered`;
 
-      if (response.error) {
-        throw new Error(response.error);
+    try {
+      const response = await makeAPIRequest("image", {
+        // This should be a POST
+        model: "hackathon/text2image",
+        prompt: prompt,
+        n: 1,
+        size: "512x512",
+        quality: "hd",
+        style: "fantasy",
+      });
+      const imageData = response.data[0];
+      let imageUrl = null;
+
+      // Handle URL-based response
+      if (imageData?.url) {
+        imageUrl = imageData.url;
+      }
+      // Handle base64 response
+      else if (imageData?.b64_json) {
+        imageUrl = `data:image/png;base64,${imageData.b64_json}`;
+
+        // Validate base64 format
+        if (!/^[A-Za-z0-9+/]+={0,2}$/.test(imageData.b64_json)) {
+          throw new Error("Invalid base64 image data");
+        }
       }
 
-      // Verify and load image
-      const loadedUrl = await this.verifyImageLoad(response.url);
-      return {
-        url: loadedUrl,
-        isFallback: false,
-        ...response,
-      };
+      if (!imageUrl) throw new Error("No image data received");
+
+      // Verify image loads successfully
+      await this.verifyImageLoad(imageUrl);
+      return imageUrl;
+      // Handle both URL and base64 responses
     } catch (error) {
       console.error("Image generation failed:", error);
-      return {
-        ...this.getPlaceholderImage(archetype, description),
-        error: error.message,
-      };
+      return getLocalPlaceholder(archetype);
     }
   },
 
@@ -436,5 +320,13 @@ const IMAGE_SERVICE = {
 };
 
 window.generateCharacterDescription = generateCharacterDescription;
-window.generateCharacterImage = generateCharacterImage;
 window.IMAGE_SERVICE = IMAGE_SERVICE;
+
+// logging method
+function log(msg, ...parameters) {
+  console.log(msg);
+  for (let parameter of parameters) {
+    console.log(parameter);
+  }
+  console.log("Finished logging...");
+}
