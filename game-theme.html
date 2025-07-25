@@ -1,3 +1,4 @@
+<!-- game-theme.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ADnDI - Game Theme</title>
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/app.js"></script>
+
 </head>
 <body>
     <div class="container">
@@ -17,7 +20,7 @@
         
         <div class="actions">
             <button id="generateTheme" class="btn-primary" disabled>Generate created context</button>
-            <button id="useDefaultTheme" class="btn-secondary">Use random default context</button>
+            <button id="useDefaultTheme" class="btn-primary">Use random default context</button>
         </div>
     </div>
 
@@ -33,35 +36,43 @@
             window.location.href = 'game.html';
         });
         
-        // ... existing code ...
-
-document.getElementById('useDefaultTheme').addEventListener('click', async () => {
-  try {
-    // Generate theme directly through Litviva API
-    const response = await makeAPIRequest('chat', {
-      model: "hackathon/qwen3",
-      messages: [{
-        role: "user",
-        content: "Generate a random D&D adventure theme in one sentence. Just provide the theme description."
-      }],
-      temperature: 0.9
-    });
-    
-    const theme = response.choices?.[0]?.message?.content || 
-                 "A mysterious dungeon full of treasures and dangers";
-    
-    localStorage.setItem('adndiTheme', theme);
-    localStorage.setItem('adndiThemeType', 'default');
-    window.location.href = 'game.html';
-    
-  } catch (error) {
-    console.error('Error generating default theme:', error);
-    alert('Failed to generate default theme. Using fallback.');
-    localStorage.setItem('adndiTheme', 'Epic fantasy adventure');
-    window.location.href = 'game.html';
-  }
-});
-
-// ... rest of file ...</script>
+        document.getElementById('useDefaultTheme').addEventListener('click', async () => {
+            try {
+                // Generate theme using Litviva API
+                const response = await makeAPIRequest('chat', {
+                    model: "hackathon/qwen3",
+                    messages: [{
+                        role: "user",
+                        content: "Generate a random D&D adventure theme in one sentence. Just provide the theme description."
+                    }],
+                    temperature: 0.9
+                });
+                
+                if (response.choices && response.choices.length > 0) {
+                    const theme = response.choices[0].message.content;
+                    localStorage.setItem('adndiTheme', theme);
+                } else {
+                    throw new Error("Empty response from API");
+                }
+                
+                localStorage.setItem('adndiThemeType', 'default');
+                window.location.href = 'game.html';
+                
+            } catch (error) {
+                console.error('Error generating default theme:', error);
+                // Fallback themes
+                const fallbackThemes = [
+                    "A mysterious dungeon full of treasures and dangers",
+                    "An epic battle between ancient dragons and mortal kingdoms",
+                    "A quest to recover a stolen artifact from the Shadow Realm",
+                    "A journey through the Elemental Planes to restore balance",
+                    "A rebellion against an evil sorcerer king"
+                ];
+                const randomTheme = fallbackThemes[Math.floor(Math.random() * fallbackThemes.length)];
+                localStorage.setItem('adndiTheme', randomTheme);
+                window.location.href = 'game.html';
+            }
+        });
+    </script>
 </body>
 </html>
