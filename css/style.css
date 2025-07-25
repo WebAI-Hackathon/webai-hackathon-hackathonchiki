@@ -201,8 +201,6 @@ textarea {
         }
         
         .card-image-container {
-            height: 200px;
-            width: 200px;
             overflow: hidden;
             background-color: transparent;
             display: inline-block;
@@ -219,13 +217,18 @@ textarea {
         .card-content {
             padding: 15px;
         }
+
+        .description-preview{
+            padding-left: 10px;
+            padding-right: 10px;
+        }
         
         .cards-container {
             display: grid;
-            justify-content: center;
-            grid-auto-flow: column;
+            grid-template-columns: repeat(3, minmax(350px, 350px));
+            grid-auto-flow: row;
             gap: 20px;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 400px));
+            justify-content: center;
             margin: 20px 0;
         }
         
@@ -413,8 +416,8 @@ textarea {
 }
 
 .card-image-container {
-  height: 230px;
-  width: 230px;
+  height: 270px;
+  width: 270px;
   display: inline-block;
   background-color: transparent;
   display: flex;
